@@ -1,0 +1,31 @@
+[project]
+name = "my_journey"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Dzmitry Zhybryk", email = "mr.zhybryk@gmail.com"},
+]
+
+dependencies = [
+    "aiogram>=3.3.0",
+    "pydantic-settings>=2.1.0",
+    "loguru>=0.7.2",
+    "aiohttp>=3.9.3",
+    "asyncpg>=0.29.0",
+    "sqlalchemy>=2.0.29",
+    "alembic>=1.13.1",
+]
+requires-python = "==3.12.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+[tool.pdm.dev-dependencies]
+lint = [
+    "ruff>=0.1.13",
+    "mypy>=1.8.0",
+]
+
+[tool.mypy]
+strict = true
+check_untyped_defs = true
+ignore_missing_imports = true

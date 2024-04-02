@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: my_helper
+    command: pdm run python app/main.py
+    env_file: .env
+    environment:
+      PYTHONPATH: /app:$PYTHONPATH
+    volumes:
+      - ./app:/code/app
+      - ./migrations:/code/migrations
+      - ./logs:/code/logs
+    tty: true
+    network_mode: host
+
+
+  postgres:
+    image: postgres:15.4
+    container_name: helper_postgres
+    environment:
+      POSTGRES_DB: "my_helper_db"
+      POSTGRES_USER: "djinkster"
+      POSTGRES_PASSWORD: "Qq3050132596"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    network_mode: host
+
+
+volumes:
+  postgres-data:
+    driver: local
