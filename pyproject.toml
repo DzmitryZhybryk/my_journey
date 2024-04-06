@@ -5,6 +5,7 @@ description = "Default template for PDM package"
 authors = [
     {name = "Dzmitry Zhybryk", email = "mr.zhybryk@gmail.com"},
 ]
+<<<<<<< HEAD
 
 dependencies = [
     "aiogram>=3.3.0",
@@ -15,10 +16,14 @@ dependencies = [
     "sqlalchemy>=2.0.29",
     "alembic>=1.13.1",
 ]
+=======
+dependencies = []
+>>>>>>> develop
 requires-python = "==3.12.*"
 readme = "README.md"
 license = {text = "MIT"}
 
+<<<<<<< HEAD
 [tool.pdm.dev-dependencies]
 lint = [
     "ruff>=0.1.13",
@@ -29,3 +34,8 @@ lint = [
 strict = true
 check_untyped_defs = true
 ignore_missing_imports = true
+=======
+
+[tool.pdm]
+package-type = "application"
+>>>>>>> develop
