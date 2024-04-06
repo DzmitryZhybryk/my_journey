@@ -9,5 +9,8 @@ class WelcomeSchema(CallbackData, prefix="welcome"):
 
 
 class AllCommandSchema(BaseModel):
-    start: str = "Начать работу с ботом"
     help: str = "Памагити!"
+    start: str = "Начать работу с ботом"
+    about_me: str = "Получить персональные данные"
+    cancel: str = "Отменить все и вернуться к началу"
+

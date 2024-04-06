@@ -1,32 +1,25 @@
 from aiogram import Bot, types
 
 
-async def set_commands(bot: Bot):
+async def set_commands(bot: Bot) -> None:
+    print("Work set command")
     commands = [
         types.BotCommand(
-            command="start",
-            description="Beginning of work"
+            command="help",
+            description="Памагити!"
         ),
         types.BotCommand(
-            command="my_data",
-            description="My personal data"
+            command="start",
+            description="Начало работы с ботом"
         ),
-        # types.BotCommand(
-        #     command="load",
-        #     description="Load you travel info"
-        # ),
-        # types.BotCommand(
-        #     command="cancel",
-        #     description="Cancel all"
-        # ),
-        # types.BotCommand(
-        #     command="get_trips",
-        #     description="Get all trip data"
-        # ),
-        # types.BotCommand(
-        #     command="registrate",
-        #     description="Registrate new user"
-        # )
+        types.BotCommand(
+            command="about_me",
+            description="Получить персональные данные"
+        ),
+        types.BotCommand(
+            command="cancel",
+            description="Отменить все и вернуться к началу"
+        ),
     ]
-
+    print(commands)
     await bot.set_my_commands(commands, types.BotCommandScopeDefault())

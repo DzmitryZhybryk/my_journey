@@ -1,21 +1,33 @@
 from aiogram import types, Router, Bot, F
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 
-from app.keyboards.welcome import get_welcome_keyboard, get_about_me_keyboard
+from app import keyboards
 from app.keyboards.schemas import AllCommandSchema
 from app.config import settings
 
 router = Router()
 
 
-@router.message(Command('start'))
-async def get_start(message: types.Message, bot: Bot):
+@router.message(Command("cancel"))
+async def cancel_handler(message: types.Message, state: FSMContext) -> None:
+    current_state = await state.get_state()
+    if current_state:
+        await state.clear()
+
+    await message.answer(
+        text="Отменено",
+        reply_markup=types.ReplyKeyboardRemove(),
+    )
+
+
+@router.message(Command("start"))
+async def get_start(message: types.Message, bot: Bot) -> None:
     photo = types.FSInputFile(settings.STATIC_STORAGE / "hello.jpg")
     await bot.send_photo(chat_id=message.chat.id,
                          photo=photo,
                          caption="*Привет! Чем сегодня займёмся?*☺️",
-                         parse_mode="Markdown",
-                         reply_markup=get_welcome_keyboard())
+                         reply_markup=keyboards.start())
     await message.delete()
 
 
@@ -28,12 +40,12 @@ async def get_help(message: types.Message) -> None:
 
 
 @router.message(Command('about_me'))
-async def about_me(message: types.Message):
-    await message.answer(text="Какие данные тебе нужны?", reply_markup=get_about_me_keyboard())
+async def about_me(message: types.Message) -> None:
+    await message.answer(text="Что именно вас интересует?", reply_markup=keyboards.about_me())
 
 
 @router.callback_query(F.data == "welcome:help::")
-async def help_callback(callback: types.CallbackQuery, bot: Bot):
+async def help_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     media = types.FSInputFile(settings.STATIC_STORAGE / "help.png")
     help_message = get_help_message()
     await callback.answer("Отправляю список доступные команд")
@@ -43,11 +55,17 @@ async def help_callback(callback: types.CallbackQuery, bot: Bot):
 
 
 @router.callback_query(F.data == "welcome::about_me:")
-async def about_me_callback(callback: types.CallbackQuery, bot: Bot):
+async def about_me_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     await callback.answer("Что именно вас интересует?")
     await bot.send_message(chat_id=callback.from_user.id,
                            text="Что именно вас интересует?",
-                           reply_markup=get_about_me_keyboard())
+                           reply_markup=keyboards.about_me())
+
+
+@router.callback_query(F.data == "welcome:travel::")
+async def travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
+    pass
+
 
 @router.callback_query()
 async def all_callback(callback: types.CallbackQuery):

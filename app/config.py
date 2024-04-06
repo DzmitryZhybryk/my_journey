@@ -1,3 +1,5 @@
+import typing
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import SecretStr, field_serializer
 from pathlib import Path
@@ -23,10 +25,10 @@ class Settings(BaseSettings):
     GEOCODING_API_KEY: SecretStr
 
     @field_serializer('TELEGRAM_BOT_API_TOKEN', 'ADMIN_TELEGRAM_ID', when_used='always')
-    def dump_secret(self, v):
+    def dump_secret(self, v: typing.Any) -> typing.Any:
         return v.get_secret_value()
 
     model_config = SettingsConfigDict(env_file='../.env', env_file_encoding='utf-8')
 
 
-settings = Settings()
+settings: Settings = Settings()  # type: ignore
