@@ -2,7 +2,6 @@ from aiogram import Bot, types
 
 
 async def set_commands(bot: Bot) -> None:
-    print("Work set command")
     commands = [
         types.BotCommand(
             command="help",
@@ -21,5 +20,4 @@ async def set_commands(bot: Bot) -> None:
             description="Отменить все и вернуться к началу"
         ),
     ]
-    print(commands)
     await bot.set_my_commands(commands, types.BotCommandScopeDefault())

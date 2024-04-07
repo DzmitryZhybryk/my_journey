@@ -7,12 +7,13 @@ from aiogram import Bot, Dispatcher
 
 from app.config import settings
 from app.handlers.base import router as base_router
+from app.handlers.me import router as me_router
+from app.handlers.travel import router as travel_router
 
 logger = get_logger()
 
 
 async def start_bot(bot: Bot) -> None:
-    print("Работает старт")
     await set_commands(bot=bot)
     logger.warning(f"Начало работы бота {settings.RUN_MODE}")
 
@@ -23,6 +24,9 @@ async def stop_bot(bot: Bot) -> None:
 
 def register_routers(dp: Dispatcher) -> None:
     dp.include_router(base_router)
+    dp.include_router(me_router)
+    dp.include_router(travel_router)
+    
 
 
 async def main() -> None:

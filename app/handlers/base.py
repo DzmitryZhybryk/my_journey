@@ -3,8 +3,8 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from app import keyboards
-from app.keyboards.schemas import AllCommandSchema
 from app.config import settings
+from app.schemas.keyboard import AllCommandSchema
 
 router = Router()
 
@@ -27,21 +27,16 @@ async def get_start(message: types.Message, bot: Bot) -> None:
     await bot.send_photo(chat_id=message.chat.id,
                          photo=photo,
                          caption="*Привет! Чем сегодня займёмся?*☺️",
-                         reply_markup=keyboards.start())
+                         reply_markup=keyboards.make_start())
     await message.delete()
 
 
-@router.message(Command('help'))
+@router.message(Command("help"))
 async def get_help(message: types.Message) -> None:
     media = types.FSInputFile(settings.STATIC_STORAGE / "help.png")
     help_message = get_help_message()
     await message.answer_photo(photo=media,
                                caption=help_message)
-
-
-@router.message(Command('about_me'))
-async def about_me(message: types.Message) -> None:
-    await message.answer(text="Что именно вас интересует?", reply_markup=keyboards.about_me())
 
 
 @router.callback_query(F.data == "welcome:help::")
@@ -53,25 +48,11 @@ async def help_callback(callback: types.CallbackQuery, bot: Bot) -> None:
                          photo=media,
                          caption=help_message)
 
-
-@router.callback_query(F.data == "welcome::about_me:")
-async def about_me_callback(callback: types.CallbackQuery, bot: Bot) -> None:
-    await callback.answer("Что именно вас интересует?")
-    await bot.send_message(chat_id=callback.from_user.id,
-                           text="Что именно вас интересует?",
-                           reply_markup=keyboards.about_me())
-
-
-@router.callback_query(F.data == "welcome:travel::")
-async def travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
-    pass
-
-
-@router.callback_query()
-async def all_callback(callback: types.CallbackQuery):
-    print(callback.data)
-    print("фигня")
-    await callback.answer(text="фигня")
+# @router.callback_query()
+# async def all_callback(callback: types.CallbackQuery):
+#     print(callback.data)
+#     print("фигня")
+#     await callback.answer(text="фигня")
 
 
 def get_help_message() -> str:
@@ -80,11 +61,3 @@ def get_help_message() -> str:
         help_message += f"/{command} - {description}\n"
 
     return help_message
-
-# @router.callback_query()
-# async def get_start_callback(call: types.CallbackQuery, bot: Bot):
-#     await call.answer(answer)
-#     await bot.edit_message_text(text=all_answers.main_menu_message,
-#                                 chat_id=call.from_user.id,
-#                                 message_id=call.message.message_id,
-#                                 reply_markup=get_main_keyboard())
