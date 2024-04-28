@@ -30,7 +30,7 @@ def register_routers(dp: Dispatcher) -> None:
 
 
 async def main() -> None:
-    bot: Bot = Bot(token=settings.dump_secret(settings.TELEGRAM_BOT_API_TOKEN), parse_mode='Markdown')
+    bot: Bot = Bot(token=settings.dump_secret(settings.TELEGRAM_BOT_API_TOKEN))
     dp: Dispatcher = Dispatcher()
     register_routers(dp)
     dp.startup.register(start_bot)

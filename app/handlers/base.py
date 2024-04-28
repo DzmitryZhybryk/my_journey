@@ -3,7 +3,9 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from app import keyboards
+from app import schemas
 from app.config import settings
+from app.database import storage
 from app.schemas.keyboard import AllCommandSchema
 
 router = Router()
@@ -23,30 +25,48 @@ async def cancel_handler(message: types.Message, state: FSMContext) -> None:
 
 @router.message(Command("start"))
 async def get_start(message: types.Message, bot: Bot) -> None:
-    photo = types.FSInputFile(settings.STATIC_STORAGE / "hello.jpg")
+    photo = types.FSInputFile(settings.STATIC_STORAGE / "hello.webp")
     await bot.send_photo(chat_id=message.chat.id,
                          photo=photo,
                          caption="*Привет! Чем сегодня займёмся?*☺️",
-                         reply_markup=keyboards.make_start())
+                         reply_markup=keyboards.make_start(),
+                         parse_mode="Markdown")
     await message.delete()
 
 
 @router.message(Command("help"))
 async def get_help(message: types.Message) -> None:
-    media = types.FSInputFile(settings.STATIC_STORAGE / "help.png")
+    media = types.FSInputFile(settings.STATIC_STORAGE / "help.webp")
     help_message = get_help_message()
     await message.answer_photo(photo=media,
                                caption=help_message)
 
 
-@router.callback_query(F.data == "welcome:help::")
+@router.callback_query(F.data == "welcome:help:::")
 async def help_callback(callback: types.CallbackQuery, bot: Bot) -> None:
-    media = types.FSInputFile(settings.STATIC_STORAGE / "help.png")
+    media = types.FSInputFile(settings.STATIC_STORAGE / "help.webp")
     help_message = get_help_message()
     await callback.answer("Отправляю список доступные команд")
     await bot.send_photo(chat_id=callback.from_user.id,
                          photo=media,
                          caption=help_message)
+
+
+@router.callback_query(F.data == "welcome::::registration")
+async def register_callback(callback: types.CallbackQuery) -> None:
+    if await storage.get_user(user_id=callback.from_user.id):
+        await callback.answer(text="Пользователь с таким telegramID уже существует",
+                              show_alert=True)
+
+    user = schemas.AddUserSchema(
+        telegram_id=callback.from_user.id,
+        full_name=callback.from_user.full_name,
+        username=callback.from_user.username,
+    )
+    await storage.add_user(user=user)
+    await callback.answer(text=f"Успешно создали нового пользователя {user.full_name} c telegramID: {user.telegram_id}",
+                          show_alert=True)
+
 
 # @router.callback_query()
 # async def all_callback(callback: types.CallbackQuery):

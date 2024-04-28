@@ -35,6 +35,7 @@ class Country(Base, DateFieldMixin):
 
     country_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(255))
+    user_id: Mapped[int] = mapped_column(Integer)
 
 
 class Travel(Base, DateFieldMixin):

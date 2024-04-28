@@ -12,10 +12,6 @@ async def set_commands(bot: Bot) -> None:
             description="Начало работы с ботом"
         ),
         types.BotCommand(
-            command="about_me",
-            description="Получить персональные данные"
-        ),
-        types.BotCommand(
             command="cancel",
             description="Отменить все и вернуться к началу"
         ),

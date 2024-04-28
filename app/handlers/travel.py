@@ -5,24 +5,36 @@ from aiogram.fsm.context import FSMContext
 
 from app import keyboards
 from app import schemas
+from app.database import storage
+from app.external.geodata import geocoding, distance
 from app.config import settings
 
 router = Router()
 
 
-@router.callback_query(F.data == "welcome:travel::")
+@router.callback_query(F.data == "welcome:::add_travel:")
 async def travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     await callback.answer("Переходим в блок о путешествиях")
-    photo = types.FSInputFile(settings.STATIC_STORAGE / "travel.jpg")
+    photo = types.FSInputFile(settings.STATIC_STORAGE / "travel.webp")
     if callback.message:
         await bot.send_photo(chat_id=callback.message.chat.id,
                              photo=photo,
                              caption="*Что хотите сделать в разделе путешествий?*☺️",
-                             reply_markup=keyboards.make_travel())
+                             reply_markup=keyboards.make_travel(),
+                             parse_mode="Markdown")
 
 
 @router.callback_query(F.data == "travel:add_travel:")
 async def add_travel_callback(callback: types.CallbackQuery, bot: Bot, state: FSMContext) -> None:
+    if not await storage.get_user(user_id=callback.from_user.id):
+        await callback.answer(text="Создать путешествие могут только зарегистрированные пользователи!",
+                              show_alert=True)
+        await state.clear()
+        if callback.message:
+            await bot.delete_message(chat_id=callback.from_user.id,
+                                     message_id=callback.message.message_id)
+        return None
+
     await callback.answer("Приступим!")
     await bot.send_message(chat_id=callback.from_user.id,
                            text="Выберите язык для идентификации городов",
@@ -71,6 +83,18 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
         await state.clear()
     await message.answer(f"Год путешествия - {year}.")
     await state.update_data(year=year)
-    context_data = await state.get_data()
-    print(context_data)
+    travel_schema = schemas.NewTravelContext(**await state.get_data())
+
+    first_place_data = await geocoding.get_geographic_data(
+        address=travel_schema.first_place,
+        language=travel_schema.language)
+    second_place_data = await geocoding.get_geographic_data(
+        address=travel_schema.last_place,
+        language=travel_schema.language)
+
+    trip_distance = await distance.get_distance(lat_1=first_place_data.latitude,
+                                                long_1=first_place_data.longitude,
+                                                lat_2=second_place_data.latitude,
+                                                long_2=second_place_data.longitude)
+
     await state.clear()
