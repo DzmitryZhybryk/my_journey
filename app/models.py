@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import DateTime, Integer, String, Text, Float
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -30,20 +31,14 @@ class User(Base, DateFieldMixin):
     birthday: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
-class Country(Base, DateFieldMixin):
-    __tablename__ = "countries"
-
-    country_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(255))
-
-
 class Travel(Base, DateFieldMixin):
     __tablename__ = "travels"
 
     travel_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    first_town: Mapped[str] = mapped_column(String(255))
-    second_town: Mapped[str] = mapped_column(String(255))
-    distance: Mapped[int] = mapped_column(Integer)
+    distance: Mapped[float] = mapped_column(Float)
     transport_type: Mapped[str] = mapped_column(String(255))
     travel_year: Mapped[int] = mapped_column(Integer)
     user_id: Mapped[int] = mapped_column(Integer)
+    location: Mapped[dict[str, str]] = mapped_column(
+        JSONB(astext_type=Text(), none_as_null=True),
+    )

@@ -1,7 +1,7 @@
 from aiogram.utils import keyboard
 
 
-def about_me() -> keyboard.ReplyKeyboardMarkup:
+def make_about_me() -> keyboard.ReplyKeyboardMarkup:
     keyboard_builder = keyboard.ReplyKeyboardBuilder()
     keyboard_builder.button(text="Локация", request_location=True)
     keyboard_builder.button(text="Контакт", request_contact=True)

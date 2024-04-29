@@ -1,4 +1,4 @@
-from loguru import logger
+from loguru import logger as _logger
 
 __all__ = [
     "get_logger"
@@ -6,10 +6,10 @@ __all__ = [
 
 
 def configure_logger() -> None:
-    logger.add('logs/debug.log', format="{time} {level} {message}", level="DEBUG")
-    logger.add('logs/warning.log', format="{time} {level} {message}", level="WARNING")
-    logger.add('logs/error.log', format="{time} {level} {message}", level="ERROR")
+    _logger.add('logs/debug.log', format="{time} {level} {message}", level="DEBUG")
+    _logger.add('logs/warning.log', format="{time} {level} {message}", level="WARNING")
+    _logger.add('logs/error.log', format="{time} {level} {message}", level="ERROR")
 
 
-def get_logger() -> logger:  # type: ignore
-    return logger
+def get_logger():
+    return _logger

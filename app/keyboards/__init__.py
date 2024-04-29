@@ -1,7 +1,11 @@
-from app.keyboards.personal import about_me
-from app.keyboards.welcome import start
+from app.keyboards.personal import make_about_me
+from app.keyboards.welcome import make_start
+from app.keyboards.travel import make_travel, make_language, make_transport_type
 
 __all__ = [
-    "about_me",
-    "start",
+    "make_about_me",
+    "make_start",
+    "make_travel",
+    "make_language",
+    "make_transport_type",
 ]

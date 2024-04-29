@@ -12,3 +12,4 @@ RUN pip install pdm && \
 
 COPY ./migrations /code/migrations/
 COPY ./app  /code/app/
+COPY ./static /code/static/
