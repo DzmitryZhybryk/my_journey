@@ -15,17 +15,16 @@ async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
 
 class DBWorker:
 
-    def __init__(self, session: AsyncSession):
-        self.session = async_session()
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
 
-    async def add_new_trip(self, user_id: int) -> None:
-        async for connect in self.session:
-            stmt = sa.insert(models.Country).values(
-                name="Belarus",
-                user_id=123123123,
+    async def add_new_travel(self, new_travel_schema: schemas.AddTravelSchema) -> None:
+        async with self.session as session:
+            stmt = sa.insert(models.Travel).values(
+                **new_travel_schema.model_dump()
             )
-            await connect.execute(stmt)
-            await connect.commit()
+            await session.execute(stmt)
+            await session.commit()
 
     async def add_user(self, user: schemas.AddUserSchema) -> None:
         async with self.session as session:

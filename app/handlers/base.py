@@ -57,6 +57,7 @@ async def register_callback(callback: types.CallbackQuery) -> None:
     if await storage.get_user(user_id=callback.from_user.id):
         await callback.answer(text="Пользователь с таким telegramID уже существует",
                               show_alert=True)
+        return None
 
     user = schemas.AddUserSchema(
         telegram_id=callback.from_user.id,

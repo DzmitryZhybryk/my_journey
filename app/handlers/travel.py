@@ -3,8 +3,7 @@ from datetime import datetime
 from aiogram import types, Router, Bot, F
 from aiogram.fsm.context import FSMContext
 
-from app import keyboards
-from app import schemas
+from app import keyboards, schemas, exceptions
 from app.database import storage
 from app.external.geodata import geocoding, distance
 from app.config import settings
@@ -81,20 +80,37 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
     if year and int(year) > datetime.now().year:
         await message.answer("Вы пытаетесь создать путешествие в будущем. Похвально, но невозможно.")
         await state.clear()
+
     await message.answer(f"Год путешествия - {year}.")
     await state.update_data(year=year)
     travel_schema = schemas.NewTravelContext(**await state.get_data())
 
-    first_place_data = await geocoding.get_geographic_data(
-        address=travel_schema.first_place,
-        language=travel_schema.language)
-    second_place_data = await geocoding.get_geographic_data(
-        address=travel_schema.last_place,
-        language=travel_schema.language)
+    try:
+        first_place_data = await geocoding.get_geographic_data(
+            address=travel_schema.first_place,
+            language=travel_schema.language)
+        second_place_data = await geocoding.get_geographic_data(
+            address=travel_schema.last_place,
+            language=travel_schema.language)
+    except exceptions.NoGeographicDataException as err:
+        await message.answer(text=f"{err.message}. Попробуйте поменять язык, или изменить название.")
+        return None
 
     trip_distance = await distance.get_distance(lat_1=first_place_data.latitude,
                                                 long_1=first_place_data.longitude,
                                                 lat_2=second_place_data.latitude,
                                                 long_2=second_place_data.longitude)
+    travel = schemas.AddTravelSchema(
+        distance=trip_distance["distance"],
+        transport_type=travel_schema.transport,
+        travel_year=travel_schema.year,
+        user_id=message.from_user.id,  # type: ignore
+        location={
+            travel_schema.first_place: first_place_data.country,
+            travel_schema.last_place: second_place_data.country,
+        }
+    )
 
+    await storage.add_new_travel(new_travel_schema=travel)
     await state.clear()
+    await message.answer(text="Путешествие успешно добавлено👍")

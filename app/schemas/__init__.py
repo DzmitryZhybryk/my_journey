@@ -2,7 +2,7 @@ from app.schemas.geodata import Coordinate
 from app.schemas.keyboard import AllCommandSchema, WelcomeSchema, TravelSchema
 from app.schemas.personal import AddUserSchema
 from app.schemas.statesform import LoadTrip
-from app.schemas.travel import NewTravelContext
+from app.schemas.travel import NewTravelContext, AddTravelSchema
 
 __all__ = [
     "LoadTrip",
@@ -12,4 +12,5 @@ __all__ = [
     "Coordinate",
     "NewTravelContext",
     "AddUserSchema",
+    "AddTravelSchema",
 ]

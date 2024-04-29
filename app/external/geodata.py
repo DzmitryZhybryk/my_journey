@@ -1,6 +1,6 @@
 import aiohttp
 
-from app import schemas
+from app import schemas, exceptions
 from app.config import settings
 
 
@@ -30,13 +30,14 @@ class Geocoding:
 
     async def get_geographic_data(self, address: str, language: str) -> schemas.Coordinate:
         response = await self._get_geographic_data(address=address, language=language)
-        if not response.get("results"):
-            #  TODO обработка исключения
-            pass
-
-        coordinates = response.get("results")[0].get("geometry").get("location")
-        country = response.get("results")[0].get("address_components")[-1].get("long_name")
-        return schemas.Coordinate(latitude=coordinates["lat"], longitude=coordinates['lng'], country=country)
+        if response.get("results"):
+            coordinates = response["results"][0]["geometry"]["location"]
+            country = response["results"][0]["address_components"][-1]["long_name"]
+            return schemas.Coordinate(latitude=coordinates["lat"], longitude=coordinates['lng'], country=country)
+        else:
+            raise exceptions.NoGeographicDataException(
+                message=f"Не удалось найти данные для {address} на языке {language}"
+            )
 
 
 class Distance:
