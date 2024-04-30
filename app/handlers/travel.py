@@ -4,9 +4,9 @@ from aiogram import types, Router, Bot, F
 from aiogram.fsm.context import FSMContext
 
 from app import keyboards, schemas, exceptions
+from app.config import settings
 from app.database import storage
 from app.external.geodata import geocoding, distance
-from app.config import settings
 
 router = Router()
 
@@ -60,6 +60,11 @@ async def get_first_place(message: types.Message, state: FSMContext) -> None:
 @router.message(schemas.LoadTrip.LAST_PLACE)
 async def get_second_place(message: types.Message, state: FSMContext) -> None:
     last_place = message.text
+    current_state: dict = await state.get_data()
+    if last_place == current_state["first_place"]:
+        await message.answer(text="Нельзя создать путешествие между двумя одинаковыми местами")
+        return None
+
     await message.answer(f"Второй город - {last_place}. Какой вид транспорта?",
                          reply_markup=keyboards.make_transport_type())
     await state.update_data(last_place=last_place)
@@ -114,3 +119,72 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
     await storage.add_new_travel(new_travel_schema=travel)
     await state.clear()
     await message.answer(text="Путешествие успешно добавлено👍")
+
+
+@router.callback_query(F.data == "travel::get_travel")
+async def get_travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
+    if not await storage.get_user(user_id=callback.from_user.id):
+        await callback.answer(
+            text="Получить информацию о своих путешествиях могут только зарегистрированные пользователи!",
+            show_alert=True
+        )
+        if callback.message:
+            await bot.delete_message(chat_id=callback.from_user.id,
+                                     message_id=callback.message.message_id)
+        return None
+
+    if isinstance(callback.message, types.Message):
+        await callback.message.edit_caption(caption="Чуть-чуть конкретней😌",
+                                            reply_markup=keyboards.make_get_travel())
+
+
+@router.callback_query(F.data == "my_travel:get_travel::")
+async def get_all_travels_callback(callback: types.CallbackQuery, bot: Bot) -> None:
+    all_travels = [
+        schemas.GetTravelSchema(
+            travel_id=travel.travel_id,
+            distance=travel.distance,
+            transport_type=travel.transport_type,
+            travel_year=travel.travel_year,
+            location=travel.location,
+        ) for travel in await storage.get_all_travels(user_id=callback.from_user.id)
+    ]
+    response = "*Предоставляю информацию по путешествиям*"
+    for travel in all_travels:
+        response += f"""
+        *TravelID:* {travel.travel_id}
+        *Distance:* {travel.distance}
+        *Transport Type:* {travel.transport_type}
+        *Travel Year:* {travel.travel_year}
+        *Location:* {travel.location}
+        """
+
+    await callback.answer(text="Информация получена")
+    await bot.send_message(chat_id=callback.from_user.id,
+                           text=response,
+                           parse_mode="Markdown")
+
+
+@router.callback_query(F.data == "my_travel::get_distance:")
+async def get_distance_callback(callback: types.CallbackQuery, bot: Bot) -> None:
+    air_distance = await storage.get_distance(user_id=callback.from_user.id,
+                                              transport_type="Воздушный")
+    ground_distance = await storage.get_distance(user_id=callback.from_user.id,
+                                                 transport_type="Наземный")
+    response = f"""
+    *Предоставляю информацию по дистанции:*
+    *Дистанция по воздуху:* {air_distance} километров
+    *Дистанция по земле:* {ground_distance} километров
+    *Всего проехал:* {air_distance + ground_distance} километров
+    """
+    await callback.answer(text="Информация получена")
+    await bot.send_message(chat_id=callback.from_user.id,
+                           text=response,
+                           parse_mode="Markdown")
+
+
+@router.callback_query(F.data == "my_travel:::get_country")
+async def get_country_callback(callback: types.CallbackQuery, bot: Bot) -> None:
+    countries = await storage.get_all_countries(user_id=callback.from_user.id)
+    for i in countries:
+        print(i)

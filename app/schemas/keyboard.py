@@ -8,13 +8,19 @@ class AllCommandSchema(BaseModel):
     cancel: str = "Отменить все и вернуться к началу"
 
 
-class WelcomeSchema(CallbackData, prefix="welcome"):
+class WelcomeKeyboardSchema(CallbackData, prefix="welcome"):
     help: str | None = None
     about_me: str | None = None
     add_travel: str | None = None
     registration: str | None = None
 
 
-class TravelSchema(CallbackData, prefix="travel"):
+class TravelKeyboardSchema(CallbackData, prefix="travel"):
     add_travel: str | None = None
-    get_travels: str | None = None
+    get_travel: str | None = None
+
+
+class GetTravelKeyboardSchema(CallbackData, prefix="my_travel"):
+    get_travel: str | None = None
+    get_distance: str | None = None
+    get_country: str | None = None

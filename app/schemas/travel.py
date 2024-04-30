@@ -1,3 +1,4 @@
+
 from pydantic import BaseModel
 
 
@@ -14,4 +15,12 @@ class AddTravelSchema(BaseModel):
     transport_type: str
     travel_year: int
     user_id: int
+    location: dict[str, str]
+
+
+class GetTravelSchema(BaseModel):
+    travel_id: int
+    distance: float
+    transport_type: str
+    travel_year: int
     location: dict[str, str]
