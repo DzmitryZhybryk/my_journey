@@ -125,7 +125,11 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
 
     await storage.add_new_travel(new_travel_schema=travel)
     await state.clear()
-    await message.answer(text="Путешествие успешно добавлено👍")
+    response = f"""
+    Путешествие из {travel.location.from_.town}, {travel.location.from_.country}  
+    в {travel.location.to.town}, {travel.location.to.country} - успешно добавлено👍
+    """
+    await message.answer(text=response)
 
 
 @router.callback_query(F.data == "travel::get_travel")
