@@ -19,10 +19,12 @@ jobs:
       - name: Get current date
         id: date
         run: |
-          echo "DATE=$(date + '%Y-%m-%d')" >> $GITHUB_ENV
+          echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
       - name: Create Release Branch
         run: |
           RELEASE_BRANCH_NAME="release-$DATE"
           git checkout -b $RELEASE_BRANCH_NAME
           git push origin $RELEASE_BRANCH_NAME
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
