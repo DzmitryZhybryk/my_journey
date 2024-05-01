@@ -59,15 +59,15 @@ async def get_first_place(message: types.Message, state: FSMContext) -> None:
 
 @router.message(schemas.LoadTrip.LAST_PLACE)
 async def get_second_place(message: types.Message, state: FSMContext) -> None:
-    last_place = message.text
+    second_place = message.text
     current_state: dict = await state.get_data()
-    if last_place == current_state["first_place"]:
+    if second_place == current_state["first_place"]:
         await message.answer(text="Нельзя создать путешествие между двумя одинаковыми местами")
         return None
 
-    await message.answer(f"Второй город - {last_place}. Какой вид транспорта?",
+    await message.answer(f"Второй город - {second_place}. Какой вид транспорта?",
                          reply_markup=keyboards.make_transport_type())
-    await state.update_data(last_place=last_place)
+    await state.update_data(second_place=second_place)
     await state.set_state(schemas.LoadTrip.TRANSPORT_TYPE)
 
 
@@ -88,6 +88,7 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
 
     await message.answer(f"Год путешествия - {year}.")
     await state.update_data(year=year)
+
     travel_schema = schemas.NewTravelContext(**await state.get_data())
 
     try:
@@ -95,7 +96,7 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
             address=travel_schema.first_place,
             language=travel_schema.language)
         second_place_data = await geocoding.get_geographic_data(
-            address=travel_schema.last_place,
+            address=travel_schema.second_place,
             language=travel_schema.language)
     except exceptions.NoGeographicDataException as err:
         await message.answer(text=f"{err.message}. Попробуйте поменять язык, или изменить название.")
@@ -110,10 +111,16 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
         transport_type=travel_schema.transport,
         travel_year=travel_schema.year,
         user_id=message.from_user.id,  # type: ignore
-        location={
-            travel_schema.first_place: first_place_data.country,
-            travel_schema.last_place: second_place_data.country,
-        }
+        location=schemas.LocationSchema(
+            from_=schemas.PointSchema(
+                town=travel_schema.first_place,
+                country=first_place_data.country,
+            ),
+            to=schemas.PointSchema(
+                town=travel_schema.second_place,
+                country=second_place_data.country,
+            )
+        )
     )
 
     await storage.add_new_travel(new_travel_schema=travel)
@@ -149,14 +156,15 @@ async def get_all_travels_callback(callback: types.CallbackQuery, bot: Bot) -> N
             location=travel.location,
         ) for travel in await storage.get_all_travels(user_id=callback.from_user.id)
     ]
-    response = "*Предоставляю информацию по путешествиям*"
+    response = "*Предоставляю информацию о путешествиях*"
     for travel in all_travels:
         response += f"""
         *TravelID:* {travel.travel_id}
-        *Distance:* {travel.distance}
-        *Transport Type:* {travel.transport_type}
-        *Travel Year:* {travel.travel_year}
-        *Location:* {travel.location}
+        *Расстояние:* {travel.distance}
+        *Типа транспорта:* {travel.transport_type}
+        *Год:* {travel.travel_year}
+        *Из:* {travel.location.from_.town}, {travel.location.from_.country}
+        *В:* {travel.location.to.town}, {travel.location.to.country}
         """
 
     await callback.answer(text="Информация получена")
@@ -186,5 +194,11 @@ async def get_distance_callback(callback: types.CallbackQuery, bot: Bot) -> None
 @router.callback_query(F.data == "my_travel:::get_country")
 async def get_country_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     countries = await storage.get_all_countries(user_id=callback.from_user.id)
-    for i in countries:
-        print(i)
+    response = "*Предоставляю информацию по странам:*\n"
+    for index, value in enumerate(countries, start=1):
+        response += f"{index}.{value}\n"
+
+    await callback.answer(text="Информация получена")
+    await bot.send_message(chat_id=callback.from_user.id,
+                           text=response,
+                           parse_mode="Markdown")

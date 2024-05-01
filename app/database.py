@@ -70,19 +70,23 @@ class DBWorker:
             distance = result.scalar()
             return distance or 0
 
-    async def get_all_countries(self, user_id: int) -> set[str]:
+    async def get_all_countries(self, user_id: int) -> ScalarResult[models.Travel]:
         async with self.session as session:
-            stmt = sa.select(
-                sa.func.jsonb_each_text(models.Travel.location)
-            ).select_from(
-                models.Travel
+            from_subquery = sa.select(
+                models.Travel.location["from_"]["country"],
             ).where(
                 models.Travel.user_id == user_id
             )
 
+            to_subquery = sa.select(
+                models.Travel.location["to"]["country"],
+            ).where(
+                models.Travel.user_id == user_id
+            )
+
+            stmt = sa.union(from_subquery, to_subquery)
             result = await session.execute(stmt)
-            countries = {row[1] for row in result.scalars()}
-            return countries
+            return result.scalars()
 
 
 storage = DBWorker(session=async_session())
