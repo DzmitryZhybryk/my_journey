@@ -2,6 +2,7 @@ from datetime import datetime
 
 from aiogram import types, Router, Bot, F
 from aiogram.fsm.context import FSMContext
+from jinja2 import Template
 
 from app import keyboards, schemas, exceptions
 from app.config import settings
@@ -157,29 +158,34 @@ async def get_distance_callback(callback: types.CallbackQuery, bot: Bot) -> None
                                               transport_type="Воздушный")
     ground_distance = await storage.get_distance(user_id=callback.from_user.id,
                                                  transport_type="Наземный")
-    response = f"""
-    *Предоставляю информацию по дистанции:*
-    *Дистанция по воздуху:* {air_distance} километров
-    *Дистанция по земле:* {ground_distance} километров
-    *Всего проехал:* {air_distance + ground_distance} километров
-    """
+    template = Template("""
+    <b>Предоставляю информацию по дистанции</b>:
+    <b>Дистанция по воздуху:</b> {{ air_distance }} километров
+    <b>Дистанция по земле:</b> {{ ground_distance }} километров
+    <b>Общая дистанция:</b> {{ result }} километров
+    """)
+    response = template.render(air_distance=air_distance,
+                               ground_distance=ground_distance,
+                               result=air_distance + ground_distance)
     await callback.answer(text="Информация получена")
     await bot.send_message(chat_id=callback.from_user.id,
                            text=response,
-                           parse_mode="Markdown")
+                           parse_mode="HTML")
 
 
 @router.callback_query(F.data == "my_travel:::get_country")
 async def get_country_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     countries = await storage.get_all_countries(user_id=callback.from_user.id)
-    response = "*Предоставляю информацию по странам:*\n"
-    for index, value in enumerate(countries, start=1):
-        response += f"{index}.{value}\n"
-
+    template = Template("""
+    <b>Предоставляю информацию по дистанции</b>:{% for country in countries %}
+    {{ loop.index }}.{{ country }}{% endfor %}
+    """)
+    response = template.render(countries=countries)
+    print(repr(response))
     await callback.answer(text="Информация получена")
     await bot.send_message(chat_id=callback.from_user.id,
                            text=response,
-                           parse_mode="Markdown")
+                           parse_mode="HTML")
 
 
 @router.callback_query(F.data == "travel:::delete_travel:")
