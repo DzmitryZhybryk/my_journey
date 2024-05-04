@@ -122,6 +122,7 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
     await message.answer(text=response,
                          parse_mode="Markdown")
     await state.clear()
+    await message.answer(text=response)
 
 
 @router.callback_query(F.data == "travel::get_travel")
