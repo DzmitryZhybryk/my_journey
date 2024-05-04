@@ -15,16 +15,6 @@ def make_travel() -> keyboard.InlineKeyboardMarkup:
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
 
 
-def make_language() -> keyboard.ReplyKeyboardMarkup:
-    keyboard_builder = keyboard.ReplyKeyboardBuilder()
-
-    keyboard_builder.button(text="ru")
-    keyboard_builder.button(text="en")
-
-    keyboard_builder.adjust(2)
-    return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
-
-
 def make_transport_type() -> keyboard.ReplyKeyboardMarkup:
     keyboard_builder = keyboard.ReplyKeyboardBuilder()
 

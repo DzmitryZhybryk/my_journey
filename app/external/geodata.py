@@ -11,33 +11,26 @@ from app.config import settings
 class Geocoding:
     def __init__(self):
         self._geocoding_service_url = settings.GEOCODING_SERVICE_URL
-        self._geocoding_api_key = settings.dump_secret(settings.GEOCODING_API_KEY)
 
-    def _get_geocoding_headers(self):
-        headers = {
-            "X-RapidAPI-Key": self._geocoding_api_key,
-            "X-RapidAPI-Host": "google-maps-geocoding.p.rapidapi.com"
-        }
-        return headers
+    async def _get_geographic_data(self, city: str, _format: str = "json") -> dict:
+        headers = {"Accept-Language": "ru, en"}
+        async with aiohttp.ClientSession(headers=headers) as session:
+            url = f"{self._geocoding_service_url}q={city}&format={_format}&addressdetails=1&limit=0&featureType=city"
+            async with session.get(url=url) as resp:
+                if resp.status == 200:
+                    return await resp.json()
+                raise exceptions.ExternalServiceError
 
-    # @decorators.async_lru_cache_decorator
-    async def _get_geographic_data(self, address: str, language: str) -> dict:
-        headers = self._get_geocoding_headers()
-        params = {"address": address, "language": language}
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url=self._geocoding_service_url, headers=headers, params=params) as resp:
-                return await resp.json()
-
-    async def get_geographic_data(self, address: str, language: str) -> schemas.Coordinate:
-        response = await self._get_geographic_data(address=address, language=language)
-        if response.get("results"):
-            coordinates = response["results"][0]["geometry"]["location"]
-            country = response["results"][0]["address_components"][-1]["long_name"]
-            return schemas.Coordinate(latitude=coordinates["lat"], longitude=coordinates['lng'], country=country)
-        else:
-            raise exceptions.NoGeographicDataException(
-                message=f"Не удалось найти данные для {address} на языке {language}"
-            )
+    async def get_geographic_data(self, city: str) -> schemas.Coordinate:
+        response = await self._get_geographic_data(city=city)
+        if response:
+            country = response[0]["address"]["country"]
+            return schemas.Coordinate(latitude=response[0]["lat"],
+                                      longitude=response[0]['lon'],
+                                      country=country)
+        raise exceptions.NoGeographicDataException(
+            message=f"Не удалось найти данные для {city}"
+        )
 
 
 class Distance:

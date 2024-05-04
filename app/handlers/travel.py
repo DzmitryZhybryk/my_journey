@@ -28,7 +28,6 @@ async def add_travel_callback(callback: types.CallbackQuery, bot: Bot, state: FS
     if not await storage.get_user(user_id=callback.from_user.id):
         await callback.answer(text="Создать путешествие могут только зарегистрированные пользователи!",
                               show_alert=True)
-        await state.clear()
         if callback.message:
             await bot.delete_message(chat_id=callback.from_user.id,
                                      message_id=callback.message.message_id)
@@ -36,16 +35,7 @@ async def add_travel_callback(callback: types.CallbackQuery, bot: Bot, state: FS
 
     await callback.answer("Приступим!")
     await bot.send_message(chat_id=callback.from_user.id,
-                           text="Выберите язык для идентификации городов",
-                           reply_markup=keyboards.make_language())
-    await state.set_state(schemas.LoadTrip.LANGUAGE)
-
-
-@router.message(schemas.LoadTrip.LANGUAGE)
-async def get_language(message: types.Message, state: FSMContext) -> None:
-    language = message.text
-    await message.answer(f"Вы выбрали {language} язык. Какой первый город?")
-    await state.update_data(language=language)
+                           text="Какой первый город?")
     await state.set_state(schemas.LoadTrip.FIRST_PLACE)
 
 
@@ -92,14 +82,13 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
     travel_schema = schemas.NewTravelContext(**await state.get_data())
 
     try:
-        first_place_data = await geocoding.get_geographic_data(
-            address=travel_schema.first_place,
-            language=travel_schema.language)
-        second_place_data = await geocoding.get_geographic_data(
-            address=travel_schema.second_place,
-            language=travel_schema.language)
+        first_place_data = await geocoding.get_geographic_data(city=travel_schema.first_place)
+        second_place_data = await geocoding.get_geographic_data(city=travel_schema.second_place)
     except exceptions.NoGeographicDataException as err:
         await message.answer(text=f"{err.message}. Попробуйте поменять язык, или изменить название.")
+        return None
+    except exceptions.ExternalServiceError:
+        await message.answer(text="Ошибка сервиса при получении геоданных. Попробуйте позже")
         return None
 
     trip_distance = await distance.get_distance(lat_1=first_place_data.latitude,
@@ -124,11 +113,15 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
     )
 
     await storage.add_new_travel(new_travel_schema=travel)
-    await state.clear()
     response = f"""
-    Путешествие из {travel.location.from_.town}, {travel.location.from_.country}  
-    в {travel.location.to.town}, {travel.location.to.country} - успешно добавлено👍
+    *Новое путешествие:*
+    Из {travel.location.from_.town}, {travel.location.from_.country}
+    В {travel.location.to.town}, {travel.location.to.country} 
+    успешно добавлено👍
     """
+    await message.answer(text=response,
+                         parse_mode="Markdown")
+    await state.clear()
     await message.answer(text=response)
 
 
