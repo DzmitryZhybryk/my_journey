@@ -23,16 +23,8 @@ async def travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
                              parse_mode="Markdown")
 
 
-@router.callback_query(F.data == "travel:add_travel:")
+@router.callback_query(F.data == "travel:add_travel:::")
 async def add_travel_callback(callback: types.CallbackQuery, bot: Bot, state: FSMContext) -> None:
-    if not await storage.get_user(user_id=callback.from_user.id):
-        await callback.answer(text="Создать путешествие могут только зарегистрированные пользователи!",
-                              show_alert=True)
-        if callback.message:
-            await bot.delete_message(chat_id=callback.from_user.id,
-                                     message_id=callback.message.message_id)
-        return None
-
     await callback.answer("Приступим!")
     await bot.send_message(chat_id=callback.from_user.id,
                            text="Какой первый город?")
@@ -122,21 +114,10 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
     await message.answer(text=response,
                          parse_mode="Markdown")
     await state.clear()
-    await message.answer(text=response)
 
 
-@router.callback_query(F.data == "travel::get_travel")
+@router.callback_query(F.data == "travel::get_travel::")
 async def get_travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
-    if not await storage.get_user(user_id=callback.from_user.id):
-        await callback.answer(
-            text="Получить информацию о своих путешествиях могут только зарегистрированные пользователи!",
-            show_alert=True
-        )
-        if callback.message:
-            await bot.delete_message(chat_id=callback.from_user.id,
-                                     message_id=callback.message.message_id)
-        return None
-
     if isinstance(callback.message, types.Message):
         await callback.message.edit_caption(caption="Чуть-чуть конкретней😌",
                                             reply_markup=keyboards.make_get_travel())
@@ -150,7 +131,7 @@ async def get_all_travels_callback(callback: types.CallbackQuery, bot: Bot) -> N
             distance=travel.distance,
             transport_type=travel.transport_type,
             travel_year=travel.travel_year,
-            location=travel.location,
+            location=travel.location,  # type: ignore
         ) for travel in await storage.get_all_travels(user_id=callback.from_user.id)
     ]
     response = "*Предоставляю информацию о путешествиях*"
@@ -199,3 +180,33 @@ async def get_country_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     await bot.send_message(chat_id=callback.from_user.id,
                            text=response,
                            parse_mode="Markdown")
+
+
+@router.callback_query(F.data == "travel:::delete_travel:")
+async def delete_travel_callback(callback: types.CallbackQuery, bot: Bot, state: FSMContext) -> None:
+    await callback.answer("Удаляем путешествие. Будьте внимательны!")
+    await bot.send_message(chat_id=callback.from_user.id,
+                           text="Введите TravelID путешествия, которое хотите удалить")
+    await state.set_state(schemas.DeleteTrip.TRAVEL_ID)
+
+
+@router.message(schemas.DeleteTrip.TRAVEL_ID)
+async def delete_travel(message: types.Message) -> None:
+    if message.from_user and message.text:
+        travel_id = int(message.text)
+        travel = await storage.get_travel_by_id(travel_id=travel_id)
+        if not travel:
+            await message.answer(text=f"Путешествие с TravelID {travel_id} не найдено")
+            return None
+
+        if travel.deleted_date:
+            await message.answer(text=f"Путешествие с TravelID {travel_id} уже удалено")
+            return None
+
+        await storage.delete_travel(travel_id=travel_id, user_id=message.from_user.id)
+        await message.answer(text=f"Путешествие с TravelID {travel_id} успешно удалено")
+
+
+@router.callback_query(F.data == "travel::::update_travel")
+async def update_travel_callback(callback: types.CallbackQuery, bot: Bot, state: FSMContext) -> None:
+    pass

@@ -18,6 +18,8 @@ class WelcomeKeyboardSchema(CallbackData, prefix="welcome"):
 class TravelKeyboardSchema(CallbackData, prefix="travel"):
     add_travel: str | None = None
     get_travel: str | None = None
+    delete_travel: str | None = None
+    update_travel: str | None = None
 
 
 class GetTravelKeyboardSchema(CallbackData, prefix="my_travel"):

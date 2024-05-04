@@ -17,10 +17,12 @@ class DBWorker:
 
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
+        self.travel_table = models.Travel
+        self.user_table = models.User
 
     async def add_new_travel(self, new_travel_schema: schemas.AddTravelSchema) -> None:
         async with self.session as session:
-            stmt = sa.insert(models.Travel).values(
+            stmt = sa.insert(self.travel_table).values(
                 **new_travel_schema.model_dump()
             )
             await session.execute(stmt)
@@ -29,11 +31,11 @@ class DBWorker:
     async def get_all_travels(self, user_id: int) -> ScalarResult[models.Travel]:
         async with self.session as session:
             stmt = sa.select(
-                models.Travel
+                self.travel_table
             ).where(
-                models.Travel.user_id == user_id
+                self.travel_table.__table__.c.user_id == user_id
             ).order_by(
-                models.Travel.travel_year
+                self.travel_table.travel_year
             )
             response = await session.execute(stmt)
             return response.scalars()
@@ -41,7 +43,7 @@ class DBWorker:
     async def add_user(self, user: schemas.AddUserSchema) -> None:
         async with self.session as session:
             stmt = sa.insert(
-                models.User
+                self.user_table
             ).values(
                 **user.model_dump()
             )
@@ -51,9 +53,9 @@ class DBWorker:
     async def get_user(self, user_id: int) -> models.User | None:
         async with self.session as session:
             stmt = sa.select(
-                models.User
+                self.user_table
             ).where(
-                models.User.telegram_id == user_id
+                self.user_table.__table__.c.telegram_id == user_id
             )
             result = await session.execute(stmt)
             return result.scalar()
@@ -61,10 +63,10 @@ class DBWorker:
     async def get_distance(self, user_id: int, transport_type: str) -> float:
         async with self.session as session:
             stmt = sa.select(
-                sa.func.sum(models.Travel.distance)
+                sa.func.sum(self.travel_table.distance)
             ).where(
-                models.Travel.transport_type == transport_type,
-                models.Travel.user_id == user_id,
+                self.travel_table.__table__.c.transport_type == transport_type,
+                self.travel_table.__table__.c.user_id == user_id,
             )
             result = await session.execute(stmt)
             distance = result.scalar()
@@ -73,20 +75,43 @@ class DBWorker:
     async def get_all_countries(self, user_id: int) -> ScalarResult[models.Travel]:
         async with self.session as session:
             from_subquery = sa.select(
-                models.Travel.location["from_"]["country"],
+                self.travel_table.location["from_"]["country"],
             ).where(
-                models.Travel.user_id == user_id
+                self.travel_table.__table__.c.user_id == user_id
             )
 
             to_subquery = sa.select(
-                models.Travel.location["to"]["country"],
+                self.travel_table.location["to"]["country"],
             ).where(
-                models.Travel.user_id == user_id
+                self.travel_table.__table__.c.user_id == user_id
             )
 
             stmt = sa.union(from_subquery, to_subquery)
             result = await session.execute(stmt)
             return result.scalars()
+
+    async def delete_travel(self, user_id: int, travel_id: int) -> None:
+        async with self.session as session:
+            stmt = sa.update(
+                self.travel_table
+            ).where(
+                self.travel_table.__table__.c.user_id == user_id,
+                self.travel_table.__table__.c.travel_id == travel_id,
+            ).values(
+                deleted_date=sa.func.now()
+            )
+            await session.execute(stmt)
+            await session.commit()
+
+    async def get_travel_by_id(self, travel_id: int) -> models.Travel | None:
+        async with self.session as session:
+            stmt = sa.select(
+                self.travel_table,
+            ).where(
+                self.travel_table.__table__.c.travel_id == travel_id
+            )
+            result = await session.execute(stmt)
+            return result.scalar()
 
 
 storage = DBWorker(session=async_session())

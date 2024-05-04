@@ -6,3 +6,7 @@ class LoadTrip(StatesGroup):
     LAST_PLACE = State()
     TRANSPORT_TYPE = State()
     TRAVEL_YEAR = State()
+
+
+class DeleteTrip(StatesGroup):
+    TRAVEL_ID = State()
