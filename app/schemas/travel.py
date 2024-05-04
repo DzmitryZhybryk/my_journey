@@ -2,7 +2,6 @@ from pydantic import BaseModel
 
 
 class NewTravelContext(BaseModel):
-    language: str
     first_place: str
     second_place: str
     transport: str
