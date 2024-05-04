@@ -135,21 +135,21 @@ async def get_all_travels_callback(callback: types.CallbackQuery, bot: Bot) -> N
             location=travel.location,  # type: ignore
         ) for travel in await storage.get_all_travels(user_id=callback.from_user.id)
     ]
-    response = "*Предоставляю информацию о путешествиях*"
-    for travel in all_travels:
-        response += f"""
-        *TravelID:* {travel.travel_id}
-        *Расстояние:* {travel.distance}
-        *Типа транспорта:* {travel.transport_type}
-        *Год:* {travel.travel_year}
-        *Из:* {travel.location.from_.town}, {travel.location.from_.country}
-        *В:* {travel.location.to.town}, {travel.location.to.country}
-        """
-
+    template = Template("""
+    <b>Предоставляю информацию о путешествиях</b>:{% for travel in all_travels %}
+    <b>TravelId:</b> {{ travel.travel_id }}
+    <b>Из:</b> {{ travel.location.from_.town }}, {{ travel.location.from_.country }}
+    <b>В:</b> {{ travel.location.to.town }}, {{ travel.location.to.country }}
+    <b>Расстояние:</b> {{ travel.distance }}
+    <b>Типа транспорта:</b> {{ travel.transport_type }}
+    <b>Год:</b> {{ travel.travel_year }}
+    {% endfor %}
+    """)
+    response = template.render(all_travels=all_travels)
     await callback.answer(text="Информация получена")
     await bot.send_message(chat_id=callback.from_user.id,
                            text=response,
-                           parse_mode="Markdown")
+                           parse_mode="HTML")
 
 
 @router.callback_query(F.data == "my_travel::get_distance:")
@@ -181,7 +181,6 @@ async def get_country_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     {{ loop.index }}.{{ country }}{% endfor %}
     """)
     response = template.render(countries=countries)
-    print(repr(response))
     await callback.answer(text="Информация получена")
     await bot.send_message(chat_id=callback.from_user.id,
                            text=response,
