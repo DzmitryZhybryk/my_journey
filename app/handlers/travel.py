@@ -14,6 +14,12 @@ router = Router()
 
 @router.callback_query(F.data == "welcome:::add_travel:")
 async def travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
+    user = await storage.get_user(user_id=callback.from_user.id)
+    if not user:
+        await callback.answer(text="Раздел путешествий только для зарегистрированных пользователей!",
+                              show_alert=True)
+        return
+
     await callback.answer("Переходим в блок о путешествиях")
     photo = types.FSInputFile(settings.STATIC_STORAGE / "travel.webp")
     if callback.message:
