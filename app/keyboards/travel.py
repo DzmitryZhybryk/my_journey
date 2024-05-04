@@ -10,6 +10,10 @@ def make_travel() -> keyboard.InlineKeyboardMarkup:
                             callback_data=schemas.TravelKeyboardSchema(add_travel="add_travel"))
     keyboard_builder.button(text="Получить информацию о имеющихся путешествиях",
                             callback_data=schemas.TravelKeyboardSchema(get_travel="get_travel"))
+    keyboard_builder.button(text="Удалить путешествие",
+                            callback_data=schemas.TravelKeyboardSchema(delete_travel="delete_travel"))
+    keyboard_builder.button(text="Редактировать путешествие",
+                            callback_data=schemas.TravelKeyboardSchema(update_travel="update_travel"))
 
     keyboard_builder.adjust(1)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
