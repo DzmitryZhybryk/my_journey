@@ -1,10 +1,12 @@
+import typing
+
 import sqlalchemy as sa
 from sqlalchemy import ScalarResult
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 from app import models
-from app import schemas
 from app.config import settings
+from app.handlers import welcome
 
 DATABASE_URL = (f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@"
                 f"{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DATABASE}")
@@ -20,13 +22,13 @@ class DBWorker:
         self.travel_table = models.Travel
         self.user_table = models.User
 
-    async def add_new_travel(self, new_travel_schema: schemas.AddTravelSchema) -> None:
-        async with self.session as session:
-            stmt = sa.insert(self.travel_table).values(
-                **new_travel_schema.model_dump()
-            )
-            await session.execute(stmt)
-            await session.commit()
+    # async def add_new_travel(self, new_travel_schema: schemas.AddTravelSchema) -> None:
+    #     async with self.session as session:
+    #         stmt = sa.insert(self.travel_table).values(
+    #             **new_travel_schema.model_dump()
+    #         )
+    #         await session.execute(stmt)
+    #         await session.commit()
 
     async def get_all_travels(self, user_id: int) -> ScalarResult[models.Travel]:
         async with self.session as session:
@@ -39,26 +41,6 @@ class DBWorker:
             )
             response = await session.execute(stmt)
             return response.scalars()
-
-    async def add_user(self, user: schemas.AddUserSchema) -> None:
-        async with self.session as session:
-            stmt = sa.insert(
-                self.user_table
-            ).values(
-                **user.model_dump()
-            )
-            await session.execute(stmt)
-            await session.commit()
-
-    async def get_user(self, user_id: int) -> models.User | None:
-        async with self.session as session:
-            stmt = sa.select(
-                self.user_table
-            ).where(
-                self.user_table.__table__.c.telegram_id == user_id
-            )
-            result = await session.execute(stmt)
-            return result.scalar()
 
     async def get_distance(self, user_id: int, transport_type: str) -> float:
         async with self.session as session:
@@ -112,6 +94,39 @@ class DBWorker:
             )
             result = await session.execute(stmt)
             return result.scalar()
+
+    async def add_user(self, user: welcome.AddUserSchema) -> None:
+        async with self.session as session:
+            stmt = sa.insert(
+                self.user_table
+            ).values(
+                **user.model_dump()
+            )
+            await session.execute(stmt)
+            await session.commit()
+
+    async def get_user(self, user_id: int) -> models.User | None:
+        async with self.session as session:
+            stmt = sa.select(
+                self.user_table
+            ).where(
+                self.user_table.__table__.c.telegram_id == user_id
+            )
+            result = await session.execute(stmt)
+            return result.scalar()
+
+    async def update_user(self, user_id: int, **kwargs: typing.Any) -> None:
+        async with self.session as session:
+            stmt = sa.update(
+                self.user_table
+            ).where(
+                self.user_table.__table__.c.telegram_id == user_id
+            ).values(
+                **kwargs,
+                updated_date=sa.func.now(),
+            )
+            await session.execute(stmt)
+            await session.commit()
 
 
 storage = DBWorker(session=async_session())
