@@ -9,8 +9,8 @@ def make_start() -> keyboard.InlineKeyboardMarkup:
     keyboard_builder.button(text="Памагити!", callback_data=schemas.WelcomeKeyboardSchema(help="help"))
     keyboard_builder.button(text="Регистрация",
                             callback_data=schemas.WelcomeKeyboardSchema(registration="registration"))
-    keyboard_builder.button(text="Получить личную информацию",
-                            callback_data=schemas.WelcomeKeyboardSchema(about_me="about_me"))
+    keyboard_builder.button(text="Личный кабинет",
+                            callback_data=schemas.WelcomeKeyboardSchema(personal="personal"))
     keyboard_builder.button(text="Путешествия", callback_data=schemas.WelcomeKeyboardSchema(add_travel="add_travel"))
 
     keyboard_builder.adjust(1)

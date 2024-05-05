@@ -26,12 +26,15 @@ async def cancel_handler(message: types.Message, state: FSMContext) -> None:
 @router.message(Command("start"))
 async def get_start(message: types.Message, bot: Bot) -> None:
     photo = types.FSInputFile(settings.STATIC_STORAGE / "hello.webp")
-    await bot.send_photo(chat_id=message.chat.id,
-                         photo=photo,
-                         caption="*Привет! Чем сегодня займёмся?*☺️",
-                         reply_markup=keyboards.make_start(),
-                         parse_mode="Markdown")
-    await message.delete()
+    if message.from_user:  # TODO сделать через middleware
+        current_user = await storage.get_user(user_id=message.from_user.id)
+        user = current_user.full_name if current_user else "Семпай"
+        await bot.send_photo(chat_id=message.chat.id,
+                             photo=photo,
+                             caption=f"*Привет, {user}! Чем сегодня займёмся?*☺️",
+                             reply_markup=keyboards.make_start(),
+                             parse_mode="Markdown")
+        await message.delete()
 
 
 @router.message(Command("help"))
@@ -63,6 +66,7 @@ async def register_callback(callback: types.CallbackQuery) -> None:
         telegram_id=callback.from_user.id,
         full_name=callback.from_user.full_name,
         username=callback.from_user.username,
+        nickname=callback.from_user.full_name
     )
     await storage.add_user(user=user)
     await callback.answer(text=f"Успешно создали нового пользователя {user.full_name} c telegramID: {user.telegram_id}",

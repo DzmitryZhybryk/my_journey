@@ -18,7 +18,7 @@ async def travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     if not user:
         await callback.answer(text="Раздел путешествий только для зарегистрированных пользователей!",
                               show_alert=True)
-        return
+        return None
 
     await callback.answer("Переходим в блок о путешествиях")
     photo = types.FSInputFile(settings.STATIC_STORAGE / "travel.webp")
@@ -220,4 +220,12 @@ async def delete_travel(message: types.Message) -> None:
 
 @router.callback_query(F.data == "travel::::update_travel")
 async def update_travel_callback(callback: types.CallbackQuery, bot: Bot, state: FSMContext) -> None:
+    await callback.answer("Приступаем к редактированию")
+    await bot.send_message(chat_id=callback.from_user.id,
+                           text="Введите TravelID путешествия, которое хотите удалить")
+    await state.set_state(schemas.DeleteTrip.TRAVEL_ID)
+
+
+@router.callback_query(F.data == "travel:::::restore_travel")
+async def restore_travel(callback: types.CallbackQuery, bot: Bot, state: FSMContext) -> None:
     pass

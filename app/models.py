@@ -29,6 +29,7 @@ class User(Base, DateFieldMixin):
     full_name: Mapped[str] = mapped_column(String(255))
     username: Mapped[str] = mapped_column(String(255))
     birthday: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    nickname: Mapped[str] = mapped_column(String(255), nullable=True)
 
 
 class Travel(Base, DateFieldMixin):
@@ -40,5 +41,5 @@ class Travel(Base, DateFieldMixin):
     travel_year: Mapped[int] = mapped_column(Integer)
     user_id: Mapped[int] = mapped_column(Integer)
     location: Mapped[dict[str, str]] = mapped_column(
-        JSONB(astext_type=Text(), none_as_null=True),
+        JSONB(astext_type=Text(), none_as_null=True), nullable=False,
     )

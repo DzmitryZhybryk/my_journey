@@ -10,7 +10,7 @@ class AllCommandSchema(BaseModel):
 
 class WelcomeKeyboardSchema(CallbackData, prefix="welcome"):
     help: str | None = None
-    about_me: str | None = None
+    personal: str | None = None
     add_travel: str | None = None
     registration: str | None = None
 
