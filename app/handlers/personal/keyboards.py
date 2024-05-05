@@ -6,7 +6,8 @@ class PersonalAreaKeyboardSchema(CallbackData, prefix="personal"):
     set_nickname: str | None = None
     set_birthday: str | None = None
     about_me: str | None = None
-    unregister: str | None = None
+    delete_user: str | None = None
+    restore_user: str | None = None
 
 
 def personal_keyboard() -> keyboard.InlineKeyboardMarkup:
@@ -19,7 +20,9 @@ def personal_keyboard() -> keyboard.InlineKeyboardMarkup:
     keyboard_builder.button(text="Получить свою геолокацию/контакт",
                             callback_data=PersonalAreaKeyboardSchema(about_me="about_me"))
     keyboard_builder.button(text="Удалить профиль",
-                            callback_data=PersonalAreaKeyboardSchema(unregister="unregister"))
+                            callback_data=PersonalAreaKeyboardSchema(delete_user="delete_user"))
+    keyboard_builder.button(text="Восстановить профиль",
+                            callback_data=PersonalAreaKeyboardSchema(restore_user="restore_user"))
 
     keyboard_builder.adjust(1)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)

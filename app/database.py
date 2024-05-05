@@ -122,7 +122,8 @@ class DBWorker:
             ).where(
                 self.user_table.__table__.c.telegram_id == user_id
             ).values(
-                **kwargs
+                **kwargs,
+                updated_date=sa.func.now(),
             )
             await session.execute(stmt)
             await session.commit()

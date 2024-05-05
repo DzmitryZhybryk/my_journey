@@ -7,3 +7,7 @@ class SetNickname(StatesGroup):
 
 class SetBirthday(StatesGroup):
     BIRTHDAY = State()
+
+
+class DeleteUser(StatesGroup):
+    DELETE = State()
