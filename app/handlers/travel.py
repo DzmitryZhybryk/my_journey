@@ -5,29 +5,10 @@ from aiogram.fsm.context import FSMContext
 from jinja2 import Template
 
 from app import keyboards, schemas, exceptions
-from app.config import settings
 from app.database import storage
 from app.external.geodata import geocoding, distance
 
 router = Router()
-
-
-@router.callback_query(F.data == "welcome:::add_travel:")
-async def travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
-    user = await storage.get_user(user_id=callback.from_user.id)
-    if not user:
-        await callback.answer(text="Раздел путешествий только для зарегистрированных пользователей!",
-                              show_alert=True)
-        return None
-
-    await callback.answer("Переходим в блок о путешествиях")
-    photo = types.FSInputFile(settings.STATIC_STORAGE / "travel.webp")
-    if callback.message:
-        await bot.send_photo(chat_id=callback.message.chat.id,
-                             photo=photo,
-                             caption="*Что хотите сделать в разделе путешествий?*☺️",
-                             reply_markup=keyboards.make_travel(),
-                             parse_mode="Markdown")
 
 
 @router.callback_query(F.data == "travel:add_travel:::")

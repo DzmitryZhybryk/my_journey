@@ -22,6 +22,7 @@ def upgrade() -> None:
                     existing_type=postgresql.JSONB(astext_type=sa.Text()),
                     nullable=False)
     op.add_column('users', sa.Column('nickname', sa.String(length=255), nullable=True))
+    op.alter_column('users', 'birthday', existing_type=sa.DateTime(), type_=sa.Date())
 
 
 def downgrade() -> None:
@@ -29,3 +30,5 @@ def downgrade() -> None:
     op.alter_column('travels', 'location',
                     existing_type=postgresql.JSONB(astext_type=sa.Text()),
                     nullable=True)
+    op.alter_column('users', 'birthday', existing_type=sa.Date(), type_=sa.DateTime())
+

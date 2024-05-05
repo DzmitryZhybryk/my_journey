@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Integer, String, Text, Float
+from sqlalchemy import Integer, String, Text, Float, Date, DateTime
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.dialects.postgresql import JSONB
@@ -28,7 +28,7 @@ class User(Base, DateFieldMixin):
     telegram_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     full_name: Mapped[str] = mapped_column(String(255))
     username: Mapped[str] = mapped_column(String(255))
-    birthday: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    birthday: Mapped[datetime] = mapped_column(Date, nullable=True)
     nickname: Mapped[str] = mapped_column(String(255), nullable=True)
 
 
