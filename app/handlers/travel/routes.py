@@ -4,9 +4,10 @@ from aiogram import types, Router, Bot, F
 from aiogram.fsm.context import FSMContext
 from jinja2 import Template
 
-from app import keyboards, schemas, exceptions
+from app import exceptions
 from app.database import storage
 from app.external.geodata import geocoding, distance
+from app.handlers.travel import stateforms, schemas, keyboards
 
 router = Router()
 
@@ -16,18 +17,18 @@ async def add_travel_callback(callback: types.CallbackQuery, bot: Bot, state: FS
     await callback.answer("Приступим!")
     await bot.send_message(chat_id=callback.from_user.id,
                            text="Какой первый город?")
-    await state.set_state(schemas.LoadTrip.FIRST_PLACE)
+    await state.set_state(stateforms.LoadTrip.FIRST_PLACE)
 
 
-@router.message(schemas.LoadTrip.FIRST_PLACE)
+@router.message(stateforms.LoadTrip.FIRST_PLACE)
 async def get_first_place(message: types.Message, state: FSMContext) -> None:
     first_place = message.text
     await message.answer(f"Первый город - {first_place}. Какой второй город?")
     await state.update_data(first_place=first_place)
-    await state.set_state(schemas.LoadTrip.LAST_PLACE)
+    await state.set_state(stateforms.LoadTrip.LAST_PLACE)
 
 
-@router.message(schemas.LoadTrip.LAST_PLACE)
+@router.message(stateforms.LoadTrip.LAST_PLACE)
 async def get_second_place(message: types.Message, state: FSMContext) -> None:
     second_place = message.text
     current_state: dict = await state.get_data()
@@ -38,18 +39,18 @@ async def get_second_place(message: types.Message, state: FSMContext) -> None:
     await message.answer(f"Второй город - {second_place}. Какой вид транспорта?",
                          reply_markup=keyboards.make_transport_type())
     await state.update_data(second_place=second_place)
-    await state.set_state(schemas.LoadTrip.TRANSPORT_TYPE)
+    await state.set_state(stateforms.LoadTrip.TRANSPORT_TYPE)
 
 
-@router.message(schemas.LoadTrip.TRANSPORT_TYPE)
+@router.message(stateforms.LoadTrip.TRANSPORT_TYPE)
 async def get_transport_type(message: types.Message, state: FSMContext) -> None:
     transport = message.text
     await message.answer(f"Вид транспорта - {transport}. В каком году было путешествие?")
     await state.update_data(transport=transport)
-    await state.set_state(schemas.LoadTrip.TRAVEL_YEAR)
+    await state.set_state(stateforms.LoadTrip.TRAVEL_YEAR)
 
 
-@router.message(schemas.LoadTrip.TRAVEL_YEAR)
+@router.message(stateforms.LoadTrip.TRAVEL_YEAR)
 async def get_travel_year(message: types.Message, state: FSMContext) -> None:
     year = message.text
     if year and int(year) > datetime.now().year:
@@ -131,7 +132,8 @@ async def get_all_travels_callback(callback: types.CallbackQuery, bot: Bot) -> N
     <b>Типа транспорта:</b> {{ travel.transport_type }}
     <b>Год:</b> {{ travel.travel_year }}
     {% endfor %}
-    """)
+    
+    """) if all_travels else Template("К сожалению, вы пока не добавили никаких путешествий😢")
     response = template.render(all_travels=all_travels)
     await callback.answer(text="Информация получена")
     await bot.send_message(chat_id=callback.from_user.id,
@@ -150,7 +152,7 @@ async def get_distance_callback(callback: types.CallbackQuery, bot: Bot) -> None
     <b>Дистанция по воздуху:</b> {{ air_distance }} километров
     <b>Дистанция по земле:</b> {{ ground_distance }} километров
     <b>Общая дистанция:</b> {{ result }} километров
-    """)
+    """) if air_distance or ground_distance else Template("К сожалению, вы пока не добавили никаких путешествий😢")
     response = template.render(air_distance=air_distance,
                                ground_distance=ground_distance,
                                result=air_distance + ground_distance)
@@ -164,9 +166,9 @@ async def get_distance_callback(callback: types.CallbackQuery, bot: Bot) -> None
 async def get_country_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     countries = await storage.get_all_countries(user_id=callback.from_user.id)
     template = Template("""
-    <b>Предоставляю информацию по дистанции</b>:{% for country in countries %}
-    {{ loop.index }}.{{ country }}{% endfor %}
-    """)
+    <b>Предоставляю информацию по странам</b>:{% for country in countries %}
+    {{ loop.index }}.{{ country[0] }}{% endfor %}
+    """) if countries else Template("К сожалению, вы пока не добавили никаких путешествий😢")
     response = template.render(countries=countries)
     await callback.answer(text="Информация получена")
     await bot.send_message(chat_id=callback.from_user.id,
@@ -179,10 +181,10 @@ async def delete_travel_callback(callback: types.CallbackQuery, bot: Bot, state:
     await callback.answer("Удаляем путешествие. Будьте внимательны!")
     await bot.send_message(chat_id=callback.from_user.id,
                            text="Введите TravelID путешествия, которое хотите удалить")
-    await state.set_state(schemas.DeleteTrip.TRAVEL_ID)
+    await state.set_state(stateforms.DeleteTrip.TRAVEL_ID)
 
 
-@router.message(schemas.DeleteTrip.TRAVEL_ID)
+@router.message(stateforms.DeleteTrip.TRAVEL_ID)
 async def delete_travel(message: types.Message) -> None:
     if message.from_user and message.text:
         travel_id = int(message.text)
@@ -204,7 +206,7 @@ async def update_travel_callback(callback: types.CallbackQuery, bot: Bot, state:
     await callback.answer("Приступаем к редактированию")
     await bot.send_message(chat_id=callback.from_user.id,
                            text="Введите TravelID путешествия, которое хотите удалить")
-    await state.set_state(schemas.DeleteTrip.TRAVEL_ID)
+    await state.set_state(stateforms.DeleteTrip.TRAVEL_ID)
 
 
 @router.callback_query(F.data == "travel:::::restore_travel")
