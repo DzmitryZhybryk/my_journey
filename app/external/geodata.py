@@ -1,6 +1,7 @@
 import aiohttp
 
-from app import schemas, exceptions
+from app import exceptions
+from app.handlers import travel
 from app.config import settings
 
 
@@ -21,11 +22,11 @@ class Geocoding:
                     return await resp.json()
                 raise exceptions.ExternalServiceError
 
-    async def get_geographic_data(self, city: str) -> schemas.Coordinate:
+    async def get_geographic_data(self, city: str) -> travel.Coordinate:
         response = await self._get_geographic_data(city=city)
         if response:
             country = response[0]["address"]["country"]
-            return schemas.Coordinate(latitude=response[0]["lat"],
+            return travel.Coordinate(latitude=response[0]["lat"],
                                       longitude=response[0]['lon'],
                                       country=country)
         raise exceptions.NoGeographicDataException(

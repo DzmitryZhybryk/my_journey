@@ -23,3 +23,33 @@ def travel_keyboard() -> keyboard.InlineKeyboardMarkup:
 
     keyboard_builder.adjust(1)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+
+
+class GetTravelKeyboardSchema(CallbackData, prefix="my_travel"):
+    get_travel: str | None = None
+    get_distance: str | None = None
+    get_country: str | None = None
+
+
+def make_transport_type() -> keyboard.ReplyKeyboardMarkup:
+    keyboard_builder = keyboard.ReplyKeyboardBuilder()
+
+    keyboard_builder.button(text="Воздушный")
+    keyboard_builder.button(text="Наземный")
+
+    keyboard_builder.adjust(2)
+    return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+
+
+def make_get_travel() -> keyboard.InlineKeyboardMarkup:
+    keyboard_builder = keyboard.InlineKeyboardBuilder()
+
+    keyboard_builder.button(text="Посмотреть все путешествия",
+                            callback_data=GetTravelKeyboardSchema(get_travel="get_travel"))
+    keyboard_builder.button(text="Оценить дистанцию",
+                            callback_data=GetTravelKeyboardSchema(get_distance="get_distance"))
+    keyboard_builder.button(text="Информация по странам",
+                            callback_data=GetTravelKeyboardSchema(get_country="get_country"))
+
+    keyboard_builder.adjust(1)
+    return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)

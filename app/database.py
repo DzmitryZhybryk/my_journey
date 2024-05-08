@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 
 from app import models
 from app.config import settings
-from app.handlers import welcome
+from app.handlers import welcome, travel
 
 DATABASE_URL = (f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@"
                 f"{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DATABASE}")
@@ -22,20 +22,21 @@ class DBWorker:
         self.travel_table = models.Travel
         self.user_table = models.User
 
-    # async def add_new_travel(self, new_travel_schema: schemas.AddTravelSchema) -> None:
-    #     async with self.session as session:
-    #         stmt = sa.insert(self.travel_table).values(
-    #             **new_travel_schema.model_dump()
-    #         )
-    #         await session.execute(stmt)
-    #         await session.commit()
+    async def add_new_travel(self, new_travel_schema: travel.AddTravelSchema) -> None:
+        async with self.session as session:
+            stmt = sa.insert(self.travel_table).values(
+                **new_travel_schema.model_dump()
+            )
+            await session.execute(stmt)
+            await session.commit()
 
     async def get_all_travels(self, user_id: int) -> ScalarResult[models.Travel]:
         async with self.session as session:
             stmt = sa.select(
                 self.travel_table
             ).where(
-                self.travel_table.__table__.c.user_id == user_id
+                self.travel_table.__table__.c.user_id == user_id,
+                self.travel_table.__table__.c.deleted_date.is_(None),
             ).order_by(
                 self.travel_table.travel_year
             )
@@ -49,6 +50,7 @@ class DBWorker:
             ).where(
                 self.travel_table.__table__.c.transport_type == transport_type,
                 self.travel_table.__table__.c.user_id == user_id,
+                self.travel_table.__table__.c.deleted_date.is_(None),
             )
             result = await session.execute(stmt)
             distance = result.scalar()
@@ -59,18 +61,20 @@ class DBWorker:
             from_subquery = sa.select(
                 self.travel_table.location["from_"]["country"],
             ).where(
-                self.travel_table.__table__.c.user_id == user_id
+                self.travel_table.__table__.c.user_id == user_id,
+                self.travel_table.__table__.c.deleted_date.is_(None),
             )
 
             to_subquery = sa.select(
                 self.travel_table.location["to"]["country"],
             ).where(
-                self.travel_table.__table__.c.user_id == user_id
+                self.travel_table.__table__.c.user_id == user_id,
+                self.travel_table.__table__.c.deleted_date.is_(None),
             )
 
             stmt = sa.union(from_subquery, to_subquery)
             result = await session.execute(stmt)
-            return result.scalars()
+            return result.fetchall()
 
     async def delete_travel(self, user_id: int, travel_id: int) -> None:
         async with self.session as session:

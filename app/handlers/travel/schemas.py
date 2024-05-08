@@ -32,3 +32,9 @@ class GetTravelSchema(BaseModel):
     transport_type: str
     travel_year: int
     location: LocationSchema
+
+
+class Coordinate(BaseModel):
+    latitude: float
+    longitude: float
+    country: str
