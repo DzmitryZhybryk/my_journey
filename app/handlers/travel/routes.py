@@ -12,7 +12,7 @@ from app.handlers.travel import stateforms, schemas, keyboards
 router = Router()
 
 
-@router.callback_query(F.data == "travel:add_travel:::")
+@router.callback_query(F.data == "travel:add_travel::")
 async def add_travel_callback(callback: types.CallbackQuery, bot: Bot, state: FSMContext) -> None:
     await callback.answer("Приступим!")
     await bot.send_message(chat_id=callback.from_user.id,
@@ -105,7 +105,7 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
     await state.clear()
 
 
-@router.callback_query(F.data == "travel::get_travel::")
+@router.callback_query(F.data == "travel::get_travel:")
 async def get_travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     if isinstance(callback.message, types.Message):
         await callback.message.edit_caption(caption="Чуть-чуть конкретней😌",
@@ -176,7 +176,7 @@ async def get_country_callback(callback: types.CallbackQuery, bot: Bot) -> None:
                            parse_mode="HTML")
 
 
-@router.callback_query(F.data == "travel:::delete_travel:")
+@router.callback_query(F.data == "travel:::delete_travel")
 async def delete_travel_callback(callback: types.CallbackQuery, bot: Bot, state: FSMContext) -> None:
     await callback.answer("Удаляем путешествие. Будьте внимательны!")
     await bot.send_message(chat_id=callback.from_user.id,
@@ -199,16 +199,3 @@ async def delete_travel(message: types.Message) -> None:
 
         await storage.delete_travel(travel_id=travel_id, user_id=message.from_user.id)
         await message.answer(text=f"Путешествие с TravelID {travel_id} успешно удалено")
-
-
-@router.callback_query(F.data == "travel::::update_travel")
-async def update_travel_callback(callback: types.CallbackQuery, bot: Bot, state: FSMContext) -> None:
-    await callback.answer("Приступаем к редактированию")
-    await bot.send_message(chat_id=callback.from_user.id,
-                           text="Введите TravelID путешествия, которое хотите удалить")
-    await state.set_state(stateforms.DeleteTrip.TRAVEL_ID)
-
-
-@router.callback_query(F.data == "travel:::::restore_travel")
-async def restore_travel(callback: types.CallbackQuery, bot: Bot, state: FSMContext) -> None:
-    pass

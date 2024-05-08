@@ -1,7 +1,8 @@
 import typing
+from typing import Tuple, Any, Sequence
 
 import sqlalchemy as sa
-from sqlalchemy import ScalarResult
+from sqlalchemy import ScalarResult, Row
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 from app import models
@@ -56,7 +57,7 @@ class DBWorker:
             distance = result.scalar()
             return distance or 0
 
-    async def get_all_countries(self, user_id: int) -> ScalarResult[models.Travel]:
+    async def get_all_countries(self, user_id: int) -> Sequence[Row[tuple[Any, ...] | Any]]:
         async with self.session as session:
             from_subquery = sa.select(
                 self.travel_table.location["from_"]["country"],

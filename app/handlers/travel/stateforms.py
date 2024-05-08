@@ -10,3 +10,7 @@ class LoadTrip(StatesGroup):
 
 class DeleteTrip(StatesGroup):
     TRAVEL_ID = State()
+
+
+class UpdateTrip(StatesGroup):
+    TRAVEL_ID = State()
