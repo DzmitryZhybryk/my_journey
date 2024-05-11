@@ -2,7 +2,6 @@ from pydantic import BaseModel
 
 
 class NewTravelContext(BaseModel):
-    language: str
     first_place: str
     second_place: str
     transport: str
@@ -33,3 +32,9 @@ class GetTravelSchema(BaseModel):
     transport_type: str
     travel_year: int
     location: LocationSchema
+
+
+class Coordinate(BaseModel):
+    latitude: float
+    longitude: float
+    country: str

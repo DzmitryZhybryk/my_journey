@@ -1,14 +1,14 @@
 import asyncio
 
-from app.commands import set_commands
-from app.utils.logger import get_logger
-
 from aiogram import Bot, Dispatcher
 
+from app.commands import set_commands
 from app.config import settings
-from app.handlers.base import router as base_router
-from app.handlers.me import router as me_router
-from app.handlers.travel import router as travel_router
+from app.handlers.personal.routes import router as personal_router
+from app.handlers.travel.routes import router as travel_router
+from app.handlers.welcome.routes import router as welcome_router
+from app.utils.logger import get_logger
+from app import middlewares
 
 logger = get_logger()
 
@@ -23,16 +23,22 @@ async def stop_bot(bot: Bot) -> None:
 
 
 def register_routers(dp: Dispatcher) -> None:
-    dp.include_router(base_router)
-    dp.include_router(me_router)
+    dp.include_router(welcome_router)
+    dp.include_router(personal_router)
     dp.include_router(travel_router)
-    
 
 
 async def main() -> None:
     bot: Bot = Bot(token=settings.dump_secret(settings.TELEGRAM_BOT_API_TOKEN))
     dp: Dispatcher = Dispatcher()
+
     register_routers(dp)
+
+    dp.message.middleware(middlewares.SetNicknameMiddleware())
+    dp.callback_query.middleware(middlewares.SetNicknameMiddleware())
+    dp.message.middleware(middlewares.ProtectionMiddleware())
+    dp.callback_query.middleware(middlewares.ProtectionMiddleware())
+
     dp.startup.register(start_bot)
     dp.shutdown.register(stop_bot)
     try:
