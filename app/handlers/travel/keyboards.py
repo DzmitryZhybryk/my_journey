@@ -6,7 +6,6 @@ class TravelKeyboardSchema(CallbackData, prefix="travel"):
     add_travel: str | None = None
     get_travel: str | None = None
     delete_travel: str | None = None
-    update_travel: str | None = None
 
 
 def travel_keyboard() -> keyboard.InlineKeyboardMarkup:
@@ -18,17 +17,9 @@ def travel_keyboard() -> keyboard.InlineKeyboardMarkup:
                             callback_data=TravelKeyboardSchema(get_travel="get_travel"))
     keyboard_builder.button(text="Удалить путешествие",
                             callback_data=TravelKeyboardSchema(delete_travel="delete_travel"))
-    keyboard_builder.button(text="Редактировать путешествие",
-                            callback_data=TravelKeyboardSchema(update_travel="update_travel"))
 
     keyboard_builder.adjust(1)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
-
-
-class GetTravelKeyboardSchema(CallbackData, prefix="my_travel"):
-    get_travel: str | None = None
-    get_distance: str | None = None
-    get_country: str | None = None
 
 
 def make_transport_type() -> keyboard.ReplyKeyboardMarkup:
@@ -39,6 +30,12 @@ def make_transport_type() -> keyboard.ReplyKeyboardMarkup:
 
     keyboard_builder.adjust(2)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+
+
+class GetTravelKeyboardSchema(CallbackData, prefix="my_travel"):
+    get_travel: str | None = None
+    get_distance: str | None = None
+    get_country: str | None = None
 
 
 def make_get_travel() -> keyboard.InlineKeyboardMarkup:

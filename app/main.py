@@ -8,6 +8,7 @@ from app.handlers.personal.routes import router as personal_router
 from app.handlers.travel.routes import router as travel_router
 from app.handlers.welcome.routes import router as welcome_router
 from app.utils.logger import get_logger
+from app.middlewares.required import SetNicknameMiddleware
 
 logger = get_logger()
 
@@ -30,7 +31,12 @@ def register_routers(dp: Dispatcher) -> None:
 async def main() -> None:
     bot: Bot = Bot(token=settings.dump_secret(settings.TELEGRAM_BOT_API_TOKEN))
     dp: Dispatcher = Dispatcher()
+
     register_routers(dp)
+
+    dp.message.middleware(SetNicknameMiddleware())
+    dp.callback_query.middleware(SetNicknameMiddleware())
+
     dp.startup.register(start_bot)
     dp.shutdown.register(stop_bot)
     try:

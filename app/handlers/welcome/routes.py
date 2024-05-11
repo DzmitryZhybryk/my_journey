@@ -18,17 +18,14 @@ def get_help_message() -> str:
 
 
 @router.message(Command("start"))
-async def get_start(message: types.Message, bot: Bot) -> None:
+async def get_start(message: types.Message, bot: Bot, nickname: str) -> None:
     photo = types.FSInputFile(settings.STATIC_STORAGE / "hello.webp")
-    if message.from_user:  # TODO сделать через middleware
-        current_user = await storage.get_user(user_id=message.from_user.id)
-        user = current_user.full_name if current_user else "Семпай"
-        await bot.send_photo(chat_id=message.chat.id,
-                             photo=photo,
-                             caption=f"*Привет, {user}! Чем сегодня займёмся?*☺️",
-                             reply_markup=welcome.welcome_keyboard(),
-                             parse_mode="Markdown")
-        await message.delete()
+    await bot.send_photo(chat_id=message.chat.id,
+                         photo=photo,
+                         caption=f"*Привет, {nickname}! Чем сегодня займёмся?*☺️",
+                         reply_markup=welcome.welcome_keyboard(),
+                         parse_mode="Markdown")
+    await message.delete()
 
 
 @router.callback_query(F.data == "welcome:help:::")
@@ -86,19 +83,13 @@ async def personal_callback(callback: types.CallbackQuery, bot: Bot) -> None:
 
 
 @router.callback_query(F.data == "welcome::::travel")
-async def travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
-    user = await storage.get_user(user_id=callback.from_user.id)
-    if not user:
-        await callback.answer(text="Раздел 'путешествия' только для зарегистрированных пользователей!",
-                              show_alert=True)
-        return None
-
+async def travel_callback(callback: types.CallbackQuery, bot: Bot, nickname: str) -> None:
     await callback.answer("Переходим в блок о путешествиях")
     photo = types.FSInputFile(settings.STATIC_STORAGE / "travel.webp")
     if callback.message:
         await bot.send_photo(chat_id=callback.message.chat.id,
                              photo=photo,
-                             caption="*Что хотите сделать в разделе путешествий?*☺️",
+                             caption=f"*Что хотите сделать в разделе путешествий, {nickname}?*☺️",
                              reply_markup=travel.travel_keyboard(),
                              parse_mode="Markdown")
 
