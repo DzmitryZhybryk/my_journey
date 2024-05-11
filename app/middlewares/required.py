@@ -1,16 +1,15 @@
 from aiogram import BaseMiddleware, types
 from typing import Callable, Awaitable, Dict, Any
 
-from app.config import settings
+from app.database import storage
 
 
-class RequiredMiddleware(BaseMiddleware):
+class SetNicknameMiddleware(BaseMiddleware):
     async def __call__(self,
                        handler: Callable[[types.Message, Dict[str, Any]], Awaitable[Any]],
-                       event: types.Message,
+                       event: types.Message,  # type: ignore
                        data: dict[str, Any]) -> Any:
-        print(event.from_user.id)
-        # if event.from_user.id == config.MY_TELEGRAM_ID:
-        #     return await handler(event, data)
-        #
-        # await event.answer(config.GREETING_STRANGERS)
+        if event.from_user:
+            user = await storage.get_user(user_id=event.from_user.id)
+            data["nickname"] = user.nickname if user else "Семпай"
+        return await handler(event, data)

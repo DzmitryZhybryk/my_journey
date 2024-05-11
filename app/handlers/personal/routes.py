@@ -27,14 +27,15 @@ async def set_nickname(message: types.Message, bot: Bot) -> None:
     if message.from_user and nickname:
         await storage.update_user(user_id=message.from_user.id, nickname=nickname)
         await bot.send_message(chat_id=message.from_user.id,
-                               text=f"Никнейм {nickname} успешно добавлен")
+                               text=f"Никнейм {nickname} успешно добавлен. Теперь я буду обращаться к тебе так☺️")
 
 
 @router.callback_query(F.data == "personal::set_birthday:::")
-async def set_birthday_callback(callback: types.CallbackQuery, bot: Bot, state: FSMContext) -> None:
+async def set_birthday_callback(callback: types.CallbackQuery, bot: Bot, state: FSMContext, nickname: str) -> None:
     await callback.answer("Давайте зададим дату рождения")
     await bot.send_message(chat_id=callback.from_user.id,
-                           text="Какую дату рождения вы хотите задать? Пожалуйста, используйте формат дд-мм-гггг")
+                           text=f"{nickname}, какую дату рождения вы хотите задать? "
+                                f"Пожалуйста, используйте формат дд-мм-гггг")
     await state.set_state(stateforms.SetBirthday.BIRTHDAY)
 
 
@@ -71,22 +72,22 @@ async def delete_user_callback(callback: types.CallbackQuery, bot: Bot, state: F
 
 
 @router.message(stateforms.DeleteUser.DELETE)
-async def delete_user(message: types.Message, bot: Bot) -> None:
+async def delete_user(message: types.Message, bot: Bot, nickname: str) -> None:
     if message.text and message.text.lower() == "да" and message.from_user:
         await storage.update_user(user_id=message.from_user.id,
                                   deleted_date=datetime.datetime.now(tz=datetime.timezone.utc))
         photo = types.FSInputFile(settings.STATIC_STORAGE / "sadness.webp")
         await bot.send_photo(chat_id=message.from_user.id,
                              photo=photo,
-                             caption="Мы будем скучать🥲")
+                             caption=f"Очень жаль, {nickname}. Мы будем скучать🥲")
 
 
 @router.callback_query(F.data == "personal:::::restore_user")
-async def restore_user_callback(callback: types.CallbackQuery, bot: Bot) -> None:
-    await callback.answer(text="Мы ради, что Вы вернулись! Восстанавливаем пользователя",
+async def restore_user_callback(callback: types.CallbackQuery, bot: Bot, nickname: str) -> None:
+    await callback.answer(text=f"Мы ради, что Вы вернулись, {nickname}! Восстанавливаем пользователя",
                           show_alert=True)
     await storage.update_user(user_id=callback.from_user.id, deleted_date=None)
     photo = types.FSInputFile(settings.STATIC_STORAGE / "happy.webp")
     await bot.send_photo(chat_id=callback.from_user.id,
                          photo=photo,
-                         caption="Ваш профиль успешно восстановлен")
+                         caption="Ваш профиль успешно восстановлен! Добро пожаловать обратно☺️")
