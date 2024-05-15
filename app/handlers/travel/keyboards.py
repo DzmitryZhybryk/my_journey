@@ -36,6 +36,7 @@ class GetTravelKeyboardSchema(CallbackData, prefix="my_travel"):
     get_travel: str | None = None
     get_distance: str | None = None
     get_country: str | None = None
+    get_detail: str | None = None
 
 
 def make_get_travel() -> keyboard.InlineKeyboardMarkup:
@@ -47,6 +48,8 @@ def make_get_travel() -> keyboard.InlineKeyboardMarkup:
                             callback_data=GetTravelKeyboardSchema(get_distance="get_distance"))
     keyboard_builder.button(text="Информация по странам",
                             callback_data=GetTravelKeyboardSchema(get_country="get_country"))
+    keyboard_builder.button(text="Получить подробную информацию",
+                            callback_data=GetTravelKeyboardSchema(get_detail="get_detail"))
 
     keyboard_builder.adjust(1)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
