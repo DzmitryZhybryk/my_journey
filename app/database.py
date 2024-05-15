@@ -1,5 +1,5 @@
 import typing
-from typing import Tuple, Any, Sequence
+from typing import Any, Sequence
 
 import sqlalchemy as sa
 from sqlalchemy import ScalarResult, Row
@@ -56,6 +56,19 @@ class DBWorker:
             result = await session.execute(stmt)
             distance = result.scalar()
             return distance or 0
+
+    async def get_travel_count(self, user_id: int, transport_type: str) -> int:
+        async with self.session as session:
+            stmt = sa.select(
+                sa.func.count(self.travel_table.travel_id)
+            ).where(
+                self.travel_table.__table__.c.transport_type == transport_type,
+                self.travel_table.__table__.c.user_id == user_id,
+                self.travel_table.__table__.c.deleted_date.is_(None),
+            )
+            result = await session.execute(stmt)
+            count = result.scalar()
+            return count or 0
 
     async def get_all_countries(self, user_id: int) -> Sequence[Row[tuple[Any, ...] | Any]]:
         async with self.session as session:
