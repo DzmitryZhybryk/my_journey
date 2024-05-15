@@ -53,3 +53,19 @@ def make_get_travel() -> keyboard.InlineKeyboardMarkup:
 
     keyboard_builder.adjust(1)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+
+
+class ReturnKeyboardSchema(CallbackData, prefix="return"):
+    to_welcome: str | None = None
+
+
+def one_more_travel_keyboard() -> keyboard.InlineKeyboardMarkup:
+    keyboard_builder = keyboard.InlineKeyboardBuilder()
+
+    keyboard_builder.button(text="Да",
+                            callback_data=TravelKeyboardSchema(add_travel="add_travel"))
+    keyboard_builder.button(text="Нет",
+                            callback_data=ReturnKeyboardSchema(to_welcome="to_welcome"))
+
+    keyboard_builder.adjust(2)
+    return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
