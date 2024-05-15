@@ -112,7 +112,7 @@ async def get_travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
                                             reply_markup=keyboards.make_get_travel())
 
 
-@router.callback_query(F.data == "my_travel:get_travel::")
+@router.callback_query(F.data == "my_travel:get_travel:::")
 async def get_all_travels_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     all_travels = [
         schemas.GetTravelSchema(
@@ -141,7 +141,7 @@ async def get_all_travels_callback(callback: types.CallbackQuery, bot: Bot) -> N
                            parse_mode="HTML")
 
 
-@router.callback_query(F.data == "my_travel::get_distance:")
+@router.callback_query(F.data == "my_travel::get_distance::")
 async def get_distance_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     air_distance = await storage.get_distance(user_id=callback.from_user.id,
                                               transport_type="Воздушный")
@@ -162,7 +162,7 @@ async def get_distance_callback(callback: types.CallbackQuery, bot: Bot) -> None
                            parse_mode="HTML")
 
 
-@router.callback_query(F.data == "my_travel:::get_country")
+@router.callback_query(F.data == "my_travel:::get_country:")
 async def get_country_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     countries = await storage.get_all_countries(user_id=callback.from_user.id)
     template = Template("""
@@ -170,6 +170,38 @@ async def get_country_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     {{ loop.index }}.{{ country[0] }}{% endfor %}
     """) if countries else Template("К сожалению, вы пока не добавили никаких путешествий😢")
     response = template.render(countries=countries)
+    await callback.answer(text="Информация получена")
+    await bot.send_message(chat_id=callback.from_user.id,
+                           text=response,
+                           parse_mode="HTML")
+
+
+@router.callback_query(F.data == "my_travel::::get_detail")
+async def get_detail_callback(callback: types.CallbackQuery, bot: Bot) -> None:
+    await callback.answer("123")
+    air_distance = await storage.get_distance(user_id=callback.from_user.id,
+                                              transport_type="Воздушный")
+    ground_distance = await storage.get_distance(user_id=callback.from_user.id,
+                                                 transport_type="Наземный")
+    air_travel_count = await storage.get_travel_count(user_id=callback.from_user.id,
+                                                      transport_type="Воздушный")
+    ground_travel_count = await storage.get_travel_count(user_id=callback.from_user.id,
+                                                         transport_type="Наземный")
+    all_countries = await storage.get_all_countries(user_id=callback.from_user.id)
+    template = Template("""
+        <b>Предоставляю подробную информация о ваших путешествиях</b>:
+        <b>Всего совершено:</b> {{ total_travel }} поездок, общей дистанцией {{ total_distance }} километров
+        <b>Из них по земле:</b> {{ ground_travel_count }} поездок, дистанция {{ ground_distance }} километров
+        <b>По воздуху:</b> {{ air_travel_count }} поездок, дистанция {{ air_distance }} километров
+        <b>Всего стран посетил:</b> {{ total_country_count }} стран
+        """) if air_distance or ground_distance else Template("К сожалению, вы пока не добавили никаких путешествий😢")
+    response = template.render(total_travel=air_travel_count + ground_travel_count,
+                               total_distance=air_distance + ground_distance,
+                               ground_travel_count=ground_travel_count,
+                               ground_distance=ground_distance,
+                               air_travel_count=air_travel_count,
+                               air_distance=air_distance,
+                               total_country_count=len(all_countries))
     await callback.answer(text="Информация получена")
     await bot.send_message(chat_id=callback.from_user.id,
                            text=response,
