@@ -8,7 +8,6 @@ from app import exceptions
 from app.database import storage
 from app.external.geodata import geocoding, distance
 from app.handlers import travel
-from app import utils
 
 router = Router()
 
@@ -106,11 +105,6 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
     await state.clear()
     await message.answer(text="Хотите добавить еще путешествие?",
                          reply_markup=travel.one_more_travel_keyboard())
-
-
-@router.callback_query(F.data == "return:to_welcome")
-async def return_to_base_callback(callback: types.CallbackQuery, bot: Bot, nickname: str) -> None:
-    await utils.return_to_base(callback=callback, bot=bot, nickname=nickname)
 
 
 @router.callback_query(F.data == "travel::get_travel:")

@@ -1,7 +1,7 @@
 from aiogram.filters.callback_data import CallbackData
 from aiogram.utils import keyboard
 
-from app import utils
+from app.handlers import general
 
 
 class TravelKeyboardSchema(CallbackData, prefix="travel"):
@@ -19,6 +19,8 @@ def travel_keyboard() -> keyboard.InlineKeyboardMarkup:
                             callback_data=TravelKeyboardSchema(get_travel="get_travel"))
     keyboard_builder.button(text="Удалить путешествие",
                             callback_data=TravelKeyboardSchema(delete_travel="delete_travel"))
+    keyboard_builder.button(text="Назад",
+                            callback_data=general.ReturnKeyboardSchema(to_welcome="to_welcome"))
 
     keyboard_builder.adjust(1)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
@@ -52,6 +54,8 @@ def get_travel_keyboard() -> keyboard.InlineKeyboardMarkup:
                             callback_data=GetTravelKeyboardSchema(get_country="get_country"))
     keyboard_builder.button(text="Получить подробную информацию",
                             callback_data=GetTravelKeyboardSchema(get_detail="get_detail"))
+    keyboard_builder.button(text="Назад",
+                            callback_data=general.ReturnKeyboardSchema(to_base_travel="to_base_travel"))
 
     keyboard_builder.adjust(1)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
@@ -63,7 +67,7 @@ def one_more_travel_keyboard() -> keyboard.InlineKeyboardMarkup:
     keyboard_builder.button(text="Да",
                             callback_data=TravelKeyboardSchema(add_travel="add_travel"))
     keyboard_builder.button(text="Нет",
-                            callback_data=utils.ReturnKeyboardSchema(to_welcome="to_welcome"))
+                            callback_data=general.ReturnKeyboardSchema(to_base_travel="to_base_travel"))
 
     keyboard_builder.adjust(2)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)

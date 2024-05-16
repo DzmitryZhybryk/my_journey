@@ -1,6 +1,8 @@
 from aiogram.filters.callback_data import CallbackData
 from aiogram.utils import keyboard
 
+from app.handlers import general
+
 
 class PersonalAreaKeyboardSchema(CallbackData, prefix="personal"):
     set_nickname: str | None = None
@@ -23,6 +25,8 @@ def personal_keyboard() -> keyboard.InlineKeyboardMarkup:
                             callback_data=PersonalAreaKeyboardSchema(delete_user="delete_user"))
     keyboard_builder.button(text="Восстановить профиль",
                             callback_data=PersonalAreaKeyboardSchema(restore_user="restore_user"))
+    keyboard_builder.button(text="Назад",
+                            callback_data=general.ReturnKeyboardSchema(to_welcome="to_welcome"))
 
     keyboard_builder.adjust(1)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
