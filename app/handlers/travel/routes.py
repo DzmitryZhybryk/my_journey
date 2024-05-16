@@ -180,7 +180,6 @@ async def get_country_callback(callback: types.CallbackQuery, bot: Bot) -> None:
 
 @router.callback_query(F.data == "my_travel::::get_detail")
 async def get_detail_callback(callback: types.CallbackQuery, bot: Bot) -> None:
-    await callback.answer("123")
     air_distance = await storage.get_distance(user_id=callback.from_user.id,
                                               transport_type="Воздушный")
     ground_distance = await storage.get_distance(user_id=callback.from_user.id,
