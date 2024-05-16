@@ -7,7 +7,7 @@ from jinja2 import Template
 from app import exceptions
 from app.database import storage
 from app.external.geodata import geocoding, distance
-from app.handlers.travel import stateforms, schemas, keyboards
+from app.handlers import travel
 
 router = Router()
 
@@ -17,18 +17,18 @@ async def add_travel_callback(callback: types.CallbackQuery, bot: Bot, state: FS
     await callback.answer("Приступим!")
     await bot.send_message(chat_id=callback.from_user.id,
                            text="Какой первый город?")
-    await state.set_state(stateforms.LoadTrip.FIRST_PLACE)
+    await state.set_state(travel.LoadTrip.FIRST_PLACE)
 
 
-@router.message(stateforms.LoadTrip.FIRST_PLACE)
+@router.message(travel.LoadTrip.FIRST_PLACE)
 async def get_first_place(message: types.Message, state: FSMContext) -> None:
     first_place = message.text
     await message.answer(f"Первый город - {first_place}. Какой второй город?")
     await state.update_data(first_place=first_place)
-    await state.set_state(stateforms.LoadTrip.LAST_PLACE)
+    await state.set_state(travel.LoadTrip.LAST_PLACE)
 
 
-@router.message(stateforms.LoadTrip.LAST_PLACE)
+@router.message(travel.LoadTrip.LAST_PLACE)
 async def get_second_place(message: types.Message, state: FSMContext) -> None:
     second_place = message.text
     current_state: dict = await state.get_data()
@@ -37,20 +37,20 @@ async def get_second_place(message: types.Message, state: FSMContext) -> None:
         return None
 
     await message.answer(f"Второй город - {second_place}. Какой вид транспорта?",
-                         reply_markup=keyboards.make_transport_type())
+                         reply_markup=travel.transport_type_keyboard())
     await state.update_data(second_place=second_place)
-    await state.set_state(stateforms.LoadTrip.TRANSPORT_TYPE)
+    await state.set_state(travel.LoadTrip.TRANSPORT_TYPE)
 
 
-@router.message(stateforms.LoadTrip.TRANSPORT_TYPE)
+@router.message(travel.LoadTrip.TRANSPORT_TYPE)
 async def get_transport_type(message: types.Message, state: FSMContext) -> None:
     transport = message.text
     await message.answer(f"Вид транспорта - {transport}. В каком году было путешествие?")
     await state.update_data(transport=transport)
-    await state.set_state(stateforms.LoadTrip.TRAVEL_YEAR)
+    await state.set_state(travel.LoadTrip.TRAVEL_YEAR)
 
 
-@router.message(stateforms.LoadTrip.TRAVEL_YEAR)
+@router.message(travel.LoadTrip.TRAVEL_YEAR)
 async def get_travel_year(message: types.Message, state: FSMContext) -> None:
     year = message.text
     if year and int(year) > datetime.now().year:
@@ -60,7 +60,7 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
     await message.answer(f"Год путешествия - {year}.")
     await state.update_data(year=year)
 
-    travel_schema = schemas.NewTravelContext(**await state.get_data())
+    travel_schema = travel.NewTravelContext(**await state.get_data())
 
     try:
         first_place_data = await geocoding.get_geographic_data(city=travel_schema.first_place)
@@ -76,52 +76,54 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
                                                 long_1=first_place_data.longitude,
                                                 lat_2=second_place_data.latitude,
                                                 long_2=second_place_data.longitude)
-    travel = schemas.AddTravelSchema(
+    my_travel = travel.AddTravelSchema(
         distance=trip_distance["distance"],
         transport_type=travel_schema.transport,
         travel_year=travel_schema.year,
         user_id=message.from_user.id,  # type: ignore
-        location=schemas.LocationSchema(
-            from_=schemas.PointSchema(
+        location=travel.LocationSchema(
+            from_=travel.PointSchema(
                 town=travel_schema.first_place,
                 country=first_place_data.country,
             ),
-            to=schemas.PointSchema(
+            to=travel.PointSchema(
                 town=travel_schema.second_place,
                 country=second_place_data.country,
             )
         )
     )
 
-    await storage.add_new_travel(new_travel_schema=travel)
+    await storage.add_new_travel(new_travel_schema=my_travel)
     response = f"""
     *Новое путешествие:*
-    Из {travel.location.from_.town}, {travel.location.from_.country}
-    В {travel.location.to.town}, {travel.location.to.country} 
+    Из {my_travel.location.from_.town}, {my_travel.location.from_.country}
+    В {my_travel.location.to.town}, {my_travel.location.to.country} 
     успешно добавлено👍
     """
     await message.answer(text=response,
                          parse_mode="Markdown")
     await state.clear()
+    await message.answer(text="Хотите добавить еще путешествие?",
+                         reply_markup=travel.one_more_travel_keyboard())
 
 
 @router.callback_query(F.data == "travel::get_travel:")
-async def get_travel_callback(callback: types.CallbackQuery, bot: Bot) -> None:
+async def get_travel_callback(callback: types.CallbackQuery) -> None:
     if isinstance(callback.message, types.Message):
         await callback.message.edit_caption(caption="Чуть-чуть конкретней😌",
-                                            reply_markup=keyboards.make_get_travel())
+                                            reply_markup=travel.get_travel_keyboard())
 
 
 @router.callback_query(F.data == "my_travel:get_travel:::")
 async def get_all_travels_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     all_travels = [
-        schemas.GetTravelSchema(
-            travel_id=travel.travel_id,
-            distance=travel.distance,
-            transport_type=travel.transport_type,
-            travel_year=travel.travel_year,
-            location=travel.location,  # type: ignore
-        ) for travel in await storage.get_all_travels(user_id=callback.from_user.id)
+        travel.GetTravelSchema(
+            travel_id=travels.travel_id,
+            distance=travels.distance,
+            transport_type=travels.transport_type,
+            travel_year=travels.travel_year,
+            location=travels.location,  # type: ignore
+        ) for travels in await storage.get_all_travels(user_id=callback.from_user.id)
     ]
     template = Template("""
     <b>Предоставляю информацию о путешествиях</b>:{% for travel in all_travels %}
@@ -178,7 +180,6 @@ async def get_country_callback(callback: types.CallbackQuery, bot: Bot) -> None:
 
 @router.callback_query(F.data == "my_travel::::get_detail")
 async def get_detail_callback(callback: types.CallbackQuery, bot: Bot) -> None:
-    await callback.answer("123")
     air_distance = await storage.get_distance(user_id=callback.from_user.id,
                                               transport_type="Воздушный")
     ground_distance = await storage.get_distance(user_id=callback.from_user.id,
@@ -213,10 +214,10 @@ async def delete_travel_callback(callback: types.CallbackQuery, bot: Bot, state:
     await callback.answer("Удаляем путешествие. Будьте внимательны!")
     await bot.send_message(chat_id=callback.from_user.id,
                            text="Введите TravelID путешествия, которое хотите удалить")
-    await state.set_state(stateforms.DeleteTrip.TRAVEL_ID)
+    await state.set_state(travel.DeleteTrip.TRAVEL_ID)
 
 
-@router.message(stateforms.DeleteTrip.TRAVEL_ID)
+@router.message(travel.DeleteTrip.TRAVEL_ID)
 async def delete_travel(message: types.Message) -> None:
     if message.from_user and message.text:
         travel_id = int(message.text)
