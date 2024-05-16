@@ -5,11 +5,9 @@ from aiogram.fsm.context import FSMContext
 from jinja2 import Template
 
 from app import exceptions
-from app.config import settings
 from app.database import storage
 from app.external.geodata import geocoding, distance
-# from app.handlers.travel import stateforms, schemas, keyboards
-from app.handlers import welcome, travel
+from app.handlers import travel
 
 router = Router()
 
@@ -109,17 +107,6 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
                          reply_markup=travel.one_more_travel_keyboard())
 
 
-@router.callback_query(F.data == "return:to_welcome")
-async def return_to_base_travel_callback(callback: types.CallbackQuery, bot: Bot, nickname: str) -> None:
-    await callback.answer("Возвращаемся на главную")
-    photo = types.FSInputFile(settings.STATIC_STORAGE / "hello.webp")
-    await bot.send_photo(chat_id=callback.from_user.id,
-                         photo=photo,
-                         caption=f"*Привет, {nickname}! Чем сегодня займёмся?*☺️",
-                         reply_markup=welcome.welcome_keyboard(),
-                         parse_mode="Markdown")
-
-
 @router.callback_query(F.data == "travel::get_travel:")
 async def get_travel_callback(callback: types.CallbackQuery) -> None:
     if isinstance(callback.message, types.Message):
@@ -135,7 +122,7 @@ async def get_all_travels_callback(callback: types.CallbackQuery, bot: Bot) -> N
             distance=travels.distance,
             transport_type=travels.transport_type,
             travel_year=travels.travel_year,
-            location=travels.location,
+            location=travels.location,  # type: ignore
         ) for travels in await storage.get_all_travels(user_id=callback.from_user.id)
     ]
     template = Template("""
