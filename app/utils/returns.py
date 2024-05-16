@@ -1,13 +1,15 @@
-from aiogram import types, Router, Bot, F
+from aiogram import types, Bot
+from aiogram.filters.callback_data import CallbackData
 
 from app.config import settings
 from app.handlers import welcome
 
-router = Router()
+
+class ReturnKeyboardSchema(CallbackData, prefix="return"):
+    to_welcome: str | None = None
 
 
-@router.callback_query(F.data == "return:to_welcome")
-async def return_to_base_callback(callback: types.CallbackQuery, bot: Bot, nickname: str) -> None:
+async def return_to_base(callback: types.CallbackQuery, bot: Bot, nickname: str) -> None:
     await callback.answer("Возвращаемся на главную")
     photo = types.FSInputFile(settings.STATIC_STORAGE / "hello.webp")
     await bot.send_photo(chat_id=callback.from_user.id,

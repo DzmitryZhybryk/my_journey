@@ -8,6 +8,7 @@ from app import exceptions
 from app.database import storage
 from app.external.geodata import geocoding, distance
 from app.handlers import travel
+from app import utils
 
 router = Router()
 
@@ -37,7 +38,7 @@ async def get_second_place(message: types.Message, state: FSMContext) -> None:
         return None
 
     await message.answer(f"Второй город - {second_place}. Какой вид транспорта?",
-                         reply_markup=travel.make_transport_type())
+                         reply_markup=travel.transport_type_keyboard())
     await state.update_data(second_place=second_place)
     await state.set_state(travel.LoadTrip.TRANSPORT_TYPE)
 
@@ -107,11 +108,16 @@ async def get_travel_year(message: types.Message, state: FSMContext) -> None:
                          reply_markup=travel.one_more_travel_keyboard())
 
 
+@router.callback_query(F.data == "return:to_welcome")
+async def return_to_base_callback(callback: types.CallbackQuery, bot: Bot, nickname: str) -> None:
+    await utils.return_to_base(callback=callback, bot=bot, nickname=nickname)
+
+
 @router.callback_query(F.data == "travel::get_travel:")
 async def get_travel_callback(callback: types.CallbackQuery) -> None:
     if isinstance(callback.message, types.Message):
         await callback.message.edit_caption(caption="Чуть-чуть конкретней😌",
-                                            reply_markup=travel.make_get_travel())
+                                            reply_markup=travel.get_travel_keyboard())
 
 
 @router.callback_query(F.data == "my_travel:get_travel:::")

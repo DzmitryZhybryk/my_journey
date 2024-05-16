@@ -1,5 +1,5 @@
-from app.handlers.travel.keyboards import (travel_keyboard, make_transport_type, one_more_travel_keyboard,
-                                           make_get_travel)
+from app.handlers.travel.keyboards import (travel_keyboard, transport_type_keyboard, one_more_travel_keyboard,
+                                           get_travel_keyboard)
 from app.handlers.travel.schemas import (AddTravelSchema, Coordinate, NewTravelContext, LocationSchema, PointSchema,
                                          GetTravelSchema)
 from app.handlers.travel.stateforms import LoadTrip, DeleteTrip
@@ -9,12 +9,12 @@ __all__ = [
     "AddTravelSchema",
     "Coordinate",
     "LoadTrip",
-    "make_transport_type",
+    "transport_type_keyboard",
     "NewTravelContext",
     "LocationSchema",
     "PointSchema",
     "one_more_travel_keyboard",
-    "make_get_travel",
+    "get_travel_keyboard",
     "GetTravelSchema",
     "DeleteTrip",
 ]
