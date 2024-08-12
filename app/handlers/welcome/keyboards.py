@@ -7,6 +7,7 @@ class WelcomeKeyboardSchema(CallbackData, prefix="welcome"):
     registration: str | None = None
     personal: str | None = None
     travel: str | None = None
+    admin: str | None = None
 
 
 def welcome_keyboard() -> keyboard.InlineKeyboardMarkup:
@@ -20,6 +21,8 @@ def welcome_keyboard() -> keyboard.InlineKeyboardMarkup:
                             callback_data=WelcomeKeyboardSchema(personal="personal"))
     keyboard_builder.button(text="Путешествия",
                             callback_data=WelcomeKeyboardSchema(travel="travel"))
+    keyboard_builder.button(text="Админка",
+                            callback_data=WelcomeKeyboardSchema(admin="admin"))
 
     keyboard_builder.adjust(1)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)

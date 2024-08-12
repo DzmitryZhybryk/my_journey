@@ -28,7 +28,7 @@ async def get_start(message: types.Message, bot: Bot, nickname: str) -> None:
     await message.delete()
 
 
-@router.callback_query(F.data == "welcome:help:::")
+@router.callback_query(F.data == "welcome:help::::")
 async def help_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     media = types.FSInputFile(settings.STATIC_STORAGE / "help.webp")
     help_message = get_help_message()
@@ -46,7 +46,7 @@ async def get_help(message: types.Message) -> None:
                                caption=help_message)
 
 
-@router.callback_query(F.data == "welcome::registration::")
+@router.callback_query(F.data == "welcome::registration:::")
 async def register_callback(callback: types.CallbackQuery) -> None:
     if await storage.get_user(user_id=callback.from_user.id):
         await callback.answer(text="Пользователь с таким telegramID уже существует",
@@ -64,7 +64,7 @@ async def register_callback(callback: types.CallbackQuery) -> None:
                           show_alert=True)
 
 
-@router.callback_query(F.data == "welcome:::personal:")
+@router.callback_query(F.data == "welcome:::personal::")
 async def personal_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     user = await storage.get_user(user_id=callback.from_user.id)
     if not user:
@@ -82,7 +82,7 @@ async def personal_callback(callback: types.CallbackQuery, bot: Bot) -> None:
                              parse_mode="Markdown")
 
 
-@router.callback_query(F.data == "welcome::::travel")
+@router.callback_query(F.data == "welcome::::travel:")
 async def travel_callback(callback: types.CallbackQuery, bot: Bot, nickname: str) -> None:
     await callback.answer("Переходим в блок о путешествиях")
     photo = types.FSInputFile(settings.STATIC_STORAGE / "travel.webp")
@@ -92,6 +92,11 @@ async def travel_callback(callback: types.CallbackQuery, bot: Bot, nickname: str
                              caption=f"*Что хотите сделать в разделе путешествий, {nickname}?*☺️",
                              reply_markup=travel.travel_keyboard(),
                              parse_mode="Markdown")
+
+
+@router.callback_query(F.data == "welcome:::::admin")
+async def admin_callback(callback: types.CallbackQuery) -> None:
+    await callback.answer("Переходим в раздел для администрации")
 
 
 @router.message(Command("cancel"))

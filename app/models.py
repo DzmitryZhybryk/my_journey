@@ -1,9 +1,16 @@
 from datetime import datetime, timezone
+from enum import StrEnum
 
-from sqlalchemy import Integer, String, Text, Float, Date, DateTime
+import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.dialects.postgresql import JSONB
+
+
+class RoleEnum(StrEnum):
+    base = "base"
+    moderator = "moderator"
+    admin = "admin"
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -12,34 +19,35 @@ class Base(AsyncAttrs, DeclarativeBase):
 
 class DateFieldMixin:
     created_date: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        sa.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     updated_date: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=True
+        sa.DateTime(timezone=True), nullable=True
     )
     deleted_date: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=True
+        sa.DateTime(timezone=True), nullable=True
     )
 
 
 class User(Base, DateFieldMixin):
     __tablename__ = "users"
 
-    telegram_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    full_name: Mapped[str] = mapped_column(String(255))
-    username: Mapped[str] = mapped_column(String(255))
-    birthday: Mapped[datetime] = mapped_column(Date, nullable=True)
-    nickname: Mapped[str] = mapped_column(String(255), nullable=True)
+    telegram_id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
+    full_name: Mapped[str] = mapped_column(sa.String(255))
+    username: Mapped[str] = mapped_column(sa.String(255))
+    birthday: Mapped[datetime] = mapped_column(sa.Date, nullable=True)
+    nickname: Mapped[str] = mapped_column(sa.String(255), nullable=True)
+    role: Mapped[RoleEnum] = mapped_column(sa.Enum(RoleEnum), default=RoleEnum.base)
 
 
 class Travel(Base, DateFieldMixin):
     __tablename__ = "travels"
 
-    travel_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    distance: Mapped[float] = mapped_column(Float)
-    transport_type: Mapped[str] = mapped_column(String(255))
-    travel_year: Mapped[int] = mapped_column(Integer)
-    user_id: Mapped[int] = mapped_column(Integer)
+    travel_id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
+    distance: Mapped[float] = mapped_column(sa.Float)
+    transport_type: Mapped[str] = mapped_column(sa.String(255))
+    travel_year: Mapped[int] = mapped_column(sa.Integer)
+    user_id: Mapped[int] = mapped_column(sa.Integer)
     location: Mapped[dict[str, str]] = mapped_column(
-        JSONB(astext_type=Text(), none_as_null=True), nullable=False,
+        JSONB(astext_type=sa.Text(), none_as_null=True), nullable=False,
     )
