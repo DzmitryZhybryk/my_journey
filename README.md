@@ -47,9 +47,9 @@ Downgrade migration
 docker exec -it my_helper pdm run alembic downgrade $revision_name
 ```
 
-## Run project
+## Run project in Development mode
 
 For start project
 ```bash
-docker compose up -d
+docker compose -f ./docker-compose-dev.yaml up --build
 ```
