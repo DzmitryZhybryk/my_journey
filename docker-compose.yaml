@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    user: "${UID}:${GID}"
     container_name: my_helper
     command: pdm run python app/main.py
     env_file: .env
