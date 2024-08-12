@@ -2,7 +2,9 @@ version: "3.9"
 services:
 
   app:
-    image: myjourneyapp/my_journey:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     user: "${UID}:${GID}"
     container_name: my_helper
     command: pdm run python app/main.py
@@ -21,9 +23,9 @@ services:
     image: postgres:15.4
     container_name: helper_postgres
     environment:
-      POSTGRES_DB: "${POSTGRES_DATABASE}"
-      POSTGRES_USER: "${POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "my_helper_db"
+      POSTGRES_USER: "djinkster"
+      POSTGRES_PASSWORD: "Qq3050132596"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     network_mode: host
