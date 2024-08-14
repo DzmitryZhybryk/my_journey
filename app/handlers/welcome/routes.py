@@ -67,12 +67,6 @@ async def register_callback(callback: types.CallbackQuery) -> None:
 
 @router.callback_query(F.data == "welcome:::personal::")
 async def personal_callback(callback: types.CallbackQuery, bot: Bot) -> None:
-    user = await storage.get_user(user_id=callback.from_user.id)
-    if not user or user.is_active is False:
-        await callback.answer(text="Раздел 'личный кабинет' только для зарегистрированных пользователей!",
-                              show_alert=True)
-        return None
-
     await callback.answer(text="Переходим в личный кабинет")
     photo = types.FSInputFile(settings.STATIC_STORAGE / "personal.webp")
     if callback.message:
