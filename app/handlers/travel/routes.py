@@ -221,12 +221,12 @@ async def delete_travel_callback(callback: types.CallbackQuery, bot: Bot, state:
 async def delete_travel(message: types.Message) -> None:
     if message.from_user and message.text:
         travel_id = int(message.text)
-        travel = await storage.get_travel_by_id(travel_id=travel_id)
-        if not travel:
+        db_travel = await storage.get_travel_by_id(travel_id=travel_id)
+        if not db_travel:
             await message.answer(text=f"Путешествие с TravelID {travel_id} не найдено")
             return None
 
-        if travel.deleted_date:
+        if db_travel.deleted_date:
             await message.answer(text=f"Путешествие с TravelID {travel_id} уже удалено")
             return None
 

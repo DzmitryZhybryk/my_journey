@@ -8,11 +8,14 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects import postgresql
 
 
-
 class RoleEnum(StrEnum):
     base = "base"
     moderator = "moderator"
     admin = "admin"
+
+    @classmethod
+    def get_roles(cls):
+        return {role.value for role in cls}
 
 
 class Base(AsyncAttrs, DeclarativeBase):

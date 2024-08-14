@@ -1,6 +1,8 @@
 from aiogram.filters.callback_data import CallbackData
 from aiogram.utils import keyboard
 
+from app.models import RoleEnum
+
 
 class AdminKeyboardSchema(CallbackData, prefix="admin"):
     get_active_users: str | None = None
@@ -16,4 +18,14 @@ def admin_keyboard() -> keyboard.InlineKeyboardMarkup:
                             callback_data=AdminKeyboardSchema(change_user_role="change_user_role"))
 
     keyboard_builder.adjust(1)
+    return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+
+
+
+def user_role_keyboard() -> keyboard.ReplyKeyboardMarkup:
+    keyboard_builder = keyboard.ReplyKeyboardBuilder()
+
+    [keyboard_builder.button(text=value) for value in RoleEnum.get_roles()]
+
+    keyboard_builder.adjust(2)
     return keyboard_builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
