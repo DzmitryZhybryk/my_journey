@@ -37,7 +37,7 @@ class ProtectionMiddleware(BaseMiddleware):
                        data: dict[str, Any]) -> Any:
         handler_object = data.get("handler")
         handler_name = handler_object.callback.__name__ if handler_object else None
-        print(handler_name)
+
         if handler_name in self.PROTECTED_HANDLER:
             if event.from_user:
                 user = await storage.get_user(user_id=event.from_user.id)
