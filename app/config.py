@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     GEOCODING_SERVICE_URL: str
     GEOCODING_API_KEY: SecretStr
 
+    # constants
+    MAX_MESSAGE_LENGTH: int = 4096
+
     @field_serializer("TELEGRAM_BOT_API_TOKEN",
                       "ADMIN_TELEGRAM_ID",
                       "GEOCODING_API_KEY",

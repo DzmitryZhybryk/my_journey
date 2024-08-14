@@ -146,5 +146,19 @@ class DBWorker:
             await session.execute(stmt)
             await session.commit()
 
+    async def get_all_users(self, is_active: bool = False) -> ScalarResult[models.User]:
+        async with self.session as session:
+            stmt = sa.select(
+                self.user_table
+            )
+
+            if is_active:
+                stmt = stmt.where(
+                    self.user_table.__table__.c.is_active == is_active
+                )
+
+            result = await session.execute(stmt)
+            return result.scalars()
+
 
 storage = DBWorker(session=async_session())

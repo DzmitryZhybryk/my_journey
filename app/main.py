@@ -2,14 +2,15 @@ import asyncio
 
 from aiogram import Bot, Dispatcher
 
+from app import middlewares
 from app.commands import set_commands
 from app.config import settings
+from app.handlers.admin.routes import router as admin_router
+from app.handlers.general.routes import router as general_router
 from app.handlers.personal.routes import router as personal_router
 from app.handlers.travel.routes import router as travel_router
 from app.handlers.welcome.routes import router as welcome_router
-from app.handlers.general.routes import router as general_router
 from app.utils.logger import get_logger
-from app import middlewares
 
 logger = get_logger()
 
@@ -28,6 +29,7 @@ def register_routers(dp: Dispatcher) -> None:
     dp.include_router(personal_router)
     dp.include_router(travel_router)
     dp.include_router(general_router)
+    dp.include_router(admin_router)
 
 
 async def main() -> None:

@@ -4,7 +4,8 @@ from aiogram.fsm.context import FSMContext
 
 from app.config import settings
 from app.database import storage
-from app.handlers import welcome, travel, personal
+from app.handlers import welcome, travel, personal, admin
+from app.models import RoleEnum
 
 router = Router()
 
@@ -67,7 +68,7 @@ async def register_callback(callback: types.CallbackQuery) -> None:
 @router.callback_query(F.data == "welcome:::personal::")
 async def personal_callback(callback: types.CallbackQuery, bot: Bot) -> None:
     user = await storage.get_user(user_id=callback.from_user.id)
-    if not user:
+    if not user or user.is_active is False:
         await callback.answer(text="Раздел 'личный кабинет' только для зарегистрированных пользователей!",
                               show_alert=True)
         return None
@@ -95,8 +96,21 @@ async def travel_callback(callback: types.CallbackQuery, bot: Bot, nickname: str
 
 
 @router.callback_query(F.data == "welcome:::::admin")
-async def admin_callback(callback: types.CallbackQuery) -> None:
+async def admin_callback(callback: types.CallbackQuery, bot: Bot, nickname: str) -> None:
+    user = await storage.get_user(user_id=callback.from_user.id)
+    if not user or user.role != RoleEnum.admin or user.is_active is False:
+        await callback.answer(text="Недостаточно прав!",
+                              show_alert=True)
+        return None
+
     await callback.answer("Переходим в раздел для администрации")
+    photo = types.FSInputFile(settings.STATIC_STORAGE / "admin.webp")
+    if callback.message:
+        await bot.send_photo(chat_id=callback.message.chat.id,
+                             photo=photo,
+                             caption="*Кого нужно отадминистрировать?*👀",
+                             reply_markup=admin.admin_keyboard(),
+                             parse_mode="Markdown")
 
 
 @router.message(Command("cancel"))
