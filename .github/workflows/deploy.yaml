@@ -28,33 +28,4 @@ jobs:
         REMOTE_PORT: ${{ secrets.REMOTE_PORT }}
         REMOTE_USER: ${{ secrets.REMOTE_USER }}
         REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
-        REPO_URL: ${{ secrets.REPO_URL }}
-      run: |
-        echo '#!/bin/bash
-        set -e
-
-        if [ ! -d "$REMOTE_DIR" ]; then
-          echo "Directory $REMOTE_DIR does not exist. Creating now."
-          mkdir -p "$REMOTE_DIR"
-          cd "$REMOTE_DIR"
-          echo "Cloning repository from $REPO_URL."
-          git clone "$REPO_URL" .
-        else
-          echo "Directory $REMOTE_DIR already exists."
-          cd "$REMOTE_DIR"
-          echo "Updating repository."
-          git pull
-        fi
-
-        echo "Stopping and removing Docker containers."
-        docker compose down || { echo "Failed to stop and remove containers"; exit 1; }
-
-        echo "Building and starting Docker containers."
-        docker compose up -d --build || { echo "Failed to build and start containers"; exit 1; }
-
-        echo "Applying database migrations."
-        docker exec -i my_helper pdm run alembic upgrade heads || { echo "Failed to apply migrations"; exit 1; }' > deploy.sh
-        chmod +x deploy.sh
-
-        scp -P $REMOTE_PORT deploy.sh $REMOTE_USER@$REMOTE_SERVER:$REMOTE_DIR/deploy.sh
-        ssh -p $REMOTE_PORT $REMOTE_USER@$REMOTE_SERVER 'bash ./deploy.sh'
+      run: ssh -p ${{ secrets.REMOTE_PORT }} ${{ secrets.REMOTE_USER }}@$${{ secrets.REMOTE_SERVER }} 'bash ${{ secrets.REMOTE_DIR }}/deploy.sh'
