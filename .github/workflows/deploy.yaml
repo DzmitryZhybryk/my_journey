@@ -19,6 +19,9 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+    - name: Add remote server to known_hosts
+      run: ssh-keyscan -p ${{ secrets.REMOTE_PORT }} ${{ secrets.REMOTE_SERVER }} >> ~/.ssh/known_hosts
+
     - name: Deploy to server
       env:
         REMOTE_SERVER: ${{ secrets.REMOTE_SERVER }}
