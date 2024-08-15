@@ -1,6 +1,7 @@
-#!/bin/bash
+!/bin/bash
 
-export $(grep -v '^#' .env | xargs)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export $(grep -v '^#' "$SCRIPT_DIR/.env" | xargs)
 
 send_error_notification() {
     local message=$1
@@ -30,7 +31,6 @@ docker compose down || { echo "Failed to stop and remove containers"; exit 1; }
 echo "Building and starting Docker containers."
 docker compose up -d --build || { echo "Failed to build and start containers"; exit 1; }
 
-# Ожидание, чтобы контейнеры полностью запустились
 echo "Waiting for containers to start..."
 # sleep 10  # Вы можете увеличить или уменьшить время ожидания, если нужно
 
