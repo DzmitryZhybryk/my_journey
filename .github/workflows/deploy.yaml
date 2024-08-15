@@ -28,4 +28,4 @@ jobs:
         REMOTE_PORT: ${{ secrets.REMOTE_PORT }}
         REMOTE_USER: ${{ secrets.REMOTE_USER }}
         REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
-      run: ssh -p ${{ secrets.REMOTE_PORT }} ${{ secrets.REMOTE_USER }}@$${{ secrets.REMOTE_SERVER }} 'bash ${{ secrets.REMOTE_DIR }}/deploy.sh'
+      run: ssh -p $REMOTE_PORT $REMOTE_USER@$REMOTE_SERVER 'bash $REMOTE_DIR/deploy.sh'
