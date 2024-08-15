@@ -75,7 +75,8 @@ async def delete_user_callback(callback: types.CallbackQuery, bot: Bot, state: F
 async def delete_user(message: types.Message, bot: Bot, nickname: str) -> None:
     if message.text and message.text.lower() == "да" and message.from_user:
         await storage.update_user(user_id=message.from_user.id,
-                                  deleted_date=datetime.datetime.now(tz=datetime.timezone.utc))
+                                  deleted_date=datetime.datetime.now(tz=datetime.timezone.utc),
+                                  is_active=False)
         photo = types.FSInputFile(settings.STATIC_STORAGE / "sadness.webp")
         await bot.send_photo(chat_id=message.from_user.id,
                              photo=photo,
@@ -86,7 +87,7 @@ async def delete_user(message: types.Message, bot: Bot, nickname: str) -> None:
 async def restore_user_callback(callback: types.CallbackQuery, bot: Bot, nickname: str) -> None:
     await callback.answer(text=f"Мы ради, что Вы вернулись, {nickname}! Восстанавливаем пользователя",
                           show_alert=True)
-    await storage.update_user(user_id=callback.from_user.id, deleted_date=None)
+    await storage.update_user(user_id=callback.from_user.id, deleted_date=None, is_active=True)
     photo = types.FSInputFile(settings.STATIC_STORAGE / "happy.webp")
     await bot.send_photo(chat_id=callback.from_user.id,
                          photo=photo,

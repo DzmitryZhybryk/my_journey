@@ -5,12 +5,17 @@ import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects import postgresql
 
 
 class RoleEnum(StrEnum):
     base = "base"
     moderator = "moderator"
     admin = "admin"
+
+    @classmethod
+    def get_roles(cls):
+        return {role.value for role in cls}
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -37,7 +42,8 @@ class User(Base, DateFieldMixin):
     username: Mapped[str] = mapped_column(sa.String(255))
     birthday: Mapped[datetime] = mapped_column(sa.Date, nullable=True)
     nickname: Mapped[str] = mapped_column(sa.String(255), nullable=True)
-    role: Mapped[RoleEnum] = mapped_column(sa.Enum(RoleEnum), default=RoleEnum.base)
+    role: Mapped[RoleEnum] = mapped_column(postgresql.ENUM(RoleEnum, name="role_enum"), default=RoleEnum.base)
+    is_active: Mapped[bool] = mapped_column(sa.Boolean, default=True)
 
 
 class Travel(Base, DateFieldMixin):

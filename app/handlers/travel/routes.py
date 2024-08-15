@@ -8,6 +8,7 @@ from app import exceptions
 from app.database import storage
 from app.external.geodata import geocoding, distance
 from app.handlers import travel
+from app.utils import funcs
 
 router = Router()
 
@@ -125,22 +126,21 @@ async def get_all_travels_callback(callback: types.CallbackQuery, bot: Bot) -> N
             location=travels.location,  # type: ignore
         ) for travels in await storage.get_all_travels(user_id=callback.from_user.id)
     ]
-    template = Template("""
-    <b>Предоставляю информацию о путешествиях</b>:{% for travel in all_travels %}
-    <b>TravelId:</b> {{ travel.travel_id }}
-    <b>Из:</b> {{ travel.location.from_.town }}, {{ travel.location.from_.country }}
-    <b>В:</b> {{ travel.location.to.town }}, {{ travel.location.to.country }}
-    <b>Расстояние:</b> {{ travel.distance }}
-    <b>Типа транспорта:</b> {{ travel.transport_type }}
-    <b>Год:</b> {{ travel.travel_year }}
-    {% endfor %}
-    
-    """) if all_travels else Template("К сожалению, вы пока не добавили никаких путешествий😢")
-    response = template.render(all_travels=all_travels)
-    await callback.answer(text="Информация получена")
-    await bot.send_message(chat_id=callback.from_user.id,
-                           text=response,
-                           parse_mode="HTML")
+
+    response = "\n\n".join(
+        f"*TravelID:* {item.travel_id}\n"
+        f"*From:* {item.location.from_.town}, {item.location.from_.country}\n"
+        f"*To:* {item.location.to.town}, {item.location.to.country}\n"
+        f"*Distance:* {item.distance}\n"
+        f"*Transport type:* {item.transport_type}\n"
+        f"*Year:* {item.travel_year}"
+        for item in all_travels
+    )
+
+    await funcs.send_long_message(chat_id=callback.from_user.id,
+                                  text=response,
+                                  bot=bot,
+                                  parse_mode="Markdown")
 
 
 @router.callback_query(F.data == "my_travel::get_distance::")
@@ -221,12 +221,12 @@ async def delete_travel_callback(callback: types.CallbackQuery, bot: Bot, state:
 async def delete_travel(message: types.Message) -> None:
     if message.from_user and message.text:
         travel_id = int(message.text)
-        travel = await storage.get_travel_by_id(travel_id=travel_id)
-        if not travel:
+        db_travel = await storage.get_travel_by_id(travel_id=travel_id)
+        if not db_travel:
             await message.answer(text=f"Путешествие с TravelID {travel_id} не найдено")
             return None
 
-        if travel.deleted_date:
+        if db_travel.deleted_date:
             await message.answer(text=f"Путешествие с TravelID {travel_id} уже удалено")
             return None
 
