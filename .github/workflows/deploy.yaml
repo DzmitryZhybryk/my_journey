@@ -29,5 +29,4 @@ jobs:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
         run: |
-          echo "Running script at path: $REMOTE_DIR/deploy.sh"
-          ssh -p $REMOTE_PORT $REMOTE_USER@$REMOTE_SERVER 'bash $REMOTE_DIR/deploy.sh'
+          ssh -p $REMOTE_PORT $REMOTE_USER@$REMOTE_SERVER 'bash /home/djinkster/bots/my_journey_app/deploy.sh'
