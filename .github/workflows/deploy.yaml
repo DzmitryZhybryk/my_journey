@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   workflow_run:
-    workflows: ["Docker Build and Push"]
+    workflows: [ "Docker Build and Push" ]
     types:
       - completed
 
@@ -11,21 +11,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup SSH
-      uses: webfactory/ssh-agent@v0.7.0
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Add remote server to known_hosts
-      run: ssh-keyscan -p ${{ secrets.REMOTE_PORT }} ${{ secrets.REMOTE_SERVER }} >> ~/.ssh/known_hosts
+      - name: Add remote server to known_hosts
+        run: ssh-keyscan -p ${{ secrets.REMOTE_PORT }} ${{ secrets.REMOTE_SERVER }} >> ~/.ssh/known_hosts
 
-    - name: Deploy to server
-      env:
-        REMOTE_SERVER: ${{ secrets.REMOTE_SERVER }}
-        REMOTE_PORT: ${{ secrets.REMOTE_PORT }}
-        REMOTE_USER: ${{ secrets.REMOTE_USER }}
-        REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
-      run: ssh -p $REMOTE_PORT $REMOTE_USER@$REMOTE_SERVER 'bash $REMOTE_DIR/deploy.sh'
+      - name: Deploy to server
+        env:
+          REMOTE_SERVER: ${{ secrets.REMOTE_SERVER }}
+          REMOTE_PORT: ${{ secrets.REMOTE_PORT }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+        run: |
+          echo "Running script at path: $REMOTE_DIR/deploy.sh"
+          ssh -p $REMOTE_PORT $REMOTE_USER@$REMOTE_SERVER 'bash $REMOTE_DIR/deploy.sh'
