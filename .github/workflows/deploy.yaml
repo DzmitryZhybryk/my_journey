@@ -57,4 +57,4 @@ jobs:
         chmod +x deploy.sh
 
         scp -P $REMOTE_PORT deploy.sh $REMOTE_USER@$REMOTE_SERVER:$REMOTE_DIR/deploy.sh
-        ssh -p $REMOTE_PORT $REMOTE_USER@$REMOTE_SERVER 'bash $REMOTE_DIR/deploy.sh'
+        ssh -p $REMOTE_PORT $REMOTE_USER@$REMOTE_SERVER 'bash ./deploy.sh'
